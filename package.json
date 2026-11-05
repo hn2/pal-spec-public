@@ -1,0 +1,35 @@
+{
+  "name": "pal-spec",
+  "version": "3.0.0-draft.5.2",
+  "description": "PAL Protocol Specification — Normative Wire Specifications (PAL/3.0+) & Conformance Test Vectors",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "bin": {
+    "pal-spec": "./bin/pal-spec.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "validate": "node validate.mjs",
+    "diag": "node bin/pal-spec.mjs doctor"
+  },
+  "keywords": [
+    "pal",
+    "pal3",
+    "pal-spec",
+    "p2p",
+    "post-quantum",
+    "ml-kem-768",
+    "ml-dsa-65",
+    "webrtc",
+    "merkle-tree",
+    "specification",
+    "wire-protocol"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hn2/pal-spec.git"
+  }
+}
