@@ -1,0 +1,568 @@
+{
+  "specVersion": "0.6.0",
+  "section": "8.5 Swarm offloading",
+  "capability": "swarm.v1",
+  "redistribution": {
+    "normalize": [
+      {
+        "input": "none",
+        "expected": "none"
+      },
+      {
+        "input": "pals",
+        "expected": "pals"
+      },
+      {
+        "input": "link-holders",
+        "expected": "link-holders"
+      },
+      {
+        "input": null,
+        "expected": "none"
+      },
+      {
+        "input": "everyone",
+        "expected": "none"
+      }
+    ],
+    "defaults": [
+      {
+        "input": {
+          "visibility": "private"
+        },
+        "expected": "none"
+      },
+      {
+        "input": {
+          "visibility": "public",
+          "encrypted": true
+        },
+        "expected": "none"
+      },
+      {
+        "input": {
+          "visibility": "friends"
+        },
+        "expected": "pals"
+      },
+      {
+        "input": {
+          "visibility": "public"
+        },
+        "expected": "link-holders"
+      },
+      {
+        "input": {
+          "station": true
+        },
+        "expected": "link-holders"
+      }
+    ]
+  },
+  "swarmPass": {
+    "domain": "pal3-swarm-pass-v1",
+    "input": {
+      "shareId": "00112233445566778899aabbccddeeff",
+      "holderEdPk": "1111111111111111111111111111111111111111111111111111111111111111",
+      "issuedAtMs": 1793880000000,
+      "expiresAtMs": 1793880600000,
+      "holderDsaPk": "44 x 1952"
+    },
+    "bodyHex": "0900000006000b6578706972657341744d7304000001a1ab9dadc0000b686f6c646572447361506b06000007a04444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444000a686f6c6465724564506b06000000201111111111111111111111111111111111111111111111111111111111111111000a69737375656441744d7304000001a1ab948600000773686172654964060000001000112233445566778899aabbccddeeff000176030000000000000001",
+    "signedMessageHex": "70616c332d737761726d2d706173732d7631e3a8d48a6d85b6f22019dcce3a7dd2f2750968a8744b607c1488daa6cf83d2f2",
+    "maxLifetimeMs": 600000,
+    "skewMs": 60000,
+    "bindingCases": [
+      {
+        "name": "both keys match the session",
+        "pass": {
+          "holderEdPk": "E1",
+          "holderDsaPk": "D1"
+        },
+        "session": {
+          "edPk": "E1",
+          "dsaPk": "D1"
+        },
+        "expectedValid": true
+      },
+      {
+        "name": "same Ed25519 key, attacker ML-DSA key",
+        "pass": {
+          "holderEdPk": "E1",
+          "holderDsaPk": "D1"
+        },
+        "session": {
+          "edPk": "E1",
+          "dsaPk": "D2"
+        },
+        "expectedValid": false
+      },
+      {
+        "name": "different Ed25519 key",
+        "pass": {
+          "holderEdPk": "E1",
+          "holderDsaPk": "D1"
+        },
+        "session": {
+          "edPk": "E2",
+          "dsaPk": "D1"
+        },
+        "expectedValid": false
+      }
+    ]
+  },
+  "shareTicket": {
+    "domain": "pal3-share-ticket-v1",
+    "input": {
+      "shareId": "00112233445566778899aabbccddeeff",
+      "ownerEdPk": "2222222222222222222222222222222222222222222222222222222222222222",
+      "ownerDsaPk": "33 x 1952",
+      "manifestRoot": null,
+      "hints": [
+        {
+          "host": "203.0.113.7",
+          "port": 52474
+        }
+      ],
+      "issuedAtMs": 1793880000000,
+      "expiresAtMs": 1793966400000,
+      "redistribution": "link-holders"
+    },
+    "bodySha256Hex": "49f29c68c5a67824cc628db834207bb39351f0dbcca00ae48849f75496985b56",
+    "signedMessageHex": "70616c332d73686172652d7469636b65742d763149f29c68c5a67824cc628db834207bb39351f0dbcca00ae48849f75496985b56"
+  },
+  "pieceResource": {
+    "shareId": "00112233445566778899aabbccddeeff",
+    "contentId": "pal3:b2t:abababababababababababababababababababababababababababababababab:1048576",
+    "expected": "swarm:00112233445566778899aabbccddeeff:pal3:b2t:abababababababababababababababababababababababababababababababab:1048576"
+  },
+  "accessDecisions": [
+    {
+      "input": {
+        "redistribution": "none",
+        "proofKind": null,
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": "none",
+        "proofKind": "pass",
+        "proofValid": true,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": "none",
+        "proofKind": "pass",
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": "none",
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": "none",
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": "none",
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": "none",
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": "pals",
+        "proofKind": null,
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_PROOF_REQUIRED"
+    },
+    {
+      "input": {
+        "redistribution": "pals",
+        "proofKind": "pass",
+        "proofValid": true,
+        "ticketRedistribution": null
+      },
+      "expected": "allow"
+    },
+    {
+      "input": {
+        "redistribution": "pals",
+        "proofKind": "pass",
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "pals",
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "pals",
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "pals",
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "pals",
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "link-holders",
+        "proofKind": null,
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_PROOF_REQUIRED"
+    },
+    {
+      "input": {
+        "redistribution": "link-holders",
+        "proofKind": "pass",
+        "proofValid": true,
+        "ticketRedistribution": null
+      },
+      "expected": "allow"
+    },
+    {
+      "input": {
+        "redistribution": "link-holders",
+        "proofKind": "pass",
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "link-holders",
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "link-holders",
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": "link-holders",
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "allow"
+    },
+    {
+      "input": {
+        "redistribution": "link-holders",
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "E_SWARM_PROOF_INVALID"
+    },
+    {
+      "input": {
+        "redistribution": null,
+        "proofKind": null,
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": null,
+        "proofKind": "pass",
+        "proofValid": true,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": null,
+        "proofKind": "pass",
+        "proofValid": false,
+        "ticketRedistribution": null
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": null,
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": null,
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "none"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": null,
+        "proofKind": "ticket",
+        "proofValid": true,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    },
+    {
+      "input": {
+        "redistribution": null,
+        "proofKind": "ticket",
+        "proofValid": false,
+        "ticketRedistribution": "link-holders"
+      },
+      "expected": "E_SWARM_NOT_REDISTRIBUTABLE"
+    }
+  ],
+  "busy": {
+    "wireText": "E_BUSY: retry after <n> ms",
+    "clamp": [
+      {
+        "input": 0,
+        "expected": 100
+      },
+      {
+        "input": 5,
+        "expected": 100
+      },
+      {
+        "input": 100,
+        "expected": 100
+      },
+      {
+        "input": 1500,
+        "expected": 1500
+      },
+      {
+        "input": 60000,
+        "expected": 60000
+      },
+      {
+        "input": 1000000000,
+        "expected": 60000
+      },
+      {
+        "input": null,
+        "expected": 60000
+      }
+    ]
+  },
+  "sources": {
+    "maxEntries": 16,
+    "ttlMs": 180000,
+    "minIntervalMs": 20000,
+    "maxPerShare": 256,
+    "entryKeys": [
+      "dsaPk",
+      "edPk",
+      "hints",
+      "observed"
+    ]
+  },
+  "relayTree": {
+    "maxFanout": 4,
+    "maxDepth": 8,
+    "parentSilenceMs": 3000,
+    "heartbeatTimeoutMs": 15000,
+    "excludeMs": 30000,
+    "steps": [
+      {
+        "op": "join",
+        "args": {
+          "pk": "a",
+          "relay": true
+        },
+        "expected": "root"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "b",
+          "relay": true
+        },
+        "expected": "root"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "c",
+          "relay": true
+        },
+        "expected": "root"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "d",
+          "relay": true
+        },
+        "expected": "root"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "e",
+          "relay": false
+        },
+        "expected": "a"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "f",
+          "relay": false
+        },
+        "expected": "a"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "g",
+          "relay": false
+        },
+        "expected": "a"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "h",
+          "relay": false
+        },
+        "expected": "a"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "i",
+          "relay": false
+        },
+        "expected": "b"
+      },
+      {
+        "op": "join",
+        "args": {
+          "pk": "j",
+          "relay": true,
+          "capacity": 2
+        },
+        "expected": "b"
+      },
+      {
+        "op": "rejoin",
+        "args": {
+          "pk": "e",
+          "lostParent": "a"
+        },
+        "expected": "b"
+      },
+      {
+        "op": "leave",
+        "args": {
+          "pk": "b"
+        },
+        "expected": [
+          {
+            "pk": "i",
+            "parent": "root"
+          },
+          {
+            "pk": "j",
+            "parent": "c"
+          },
+          {
+            "pk": "e",
+            "parent": "c"
+          }
+        ]
+      }
+    ]
+  },
+  "capabilityNegotiation": [
+    {
+      "local": "core.v1,stream.v1,swarm.v1",
+      "peer": "core.v1,swarm.v1",
+      "expected": true
+    },
+    {
+      "local": "core.v1,swarm.v1",
+      "peer": "core.v1,stream.v1",
+      "expected": false
+    }
+  ]
+}

@@ -1,0 +1,289 @@
+{
+  "specVersion": "0.6.0",
+  "section": "7.1",
+  "encoding": "request body and response result are PAL-CBOR maps (A.3); byte strings are raw bytes; u64 values are integers up to 2^64-1",
+  "operations": [
+    {
+      "name": "grant.request",
+      "capability": null,
+      "caller": "any authenticated peer",
+      "request": {
+        "resource": "text 1-256",
+        "operations": "array 1-8 of read|list|stream|write|delete|reshare|chat|sync|relay",
+        "note": "optional text 0-256"
+      },
+      "response": {
+        "requestId": "bytes16",
+        "status": "pending"
+      },
+      "errors": [
+        "E_PAL3_INVALID_INPUT",
+        "E_BUSY",
+        "E_PAL3_UNSUPPORTED_OP"
+      ]
+    },
+    {
+      "name": "grant.issue",
+      "capability": null,
+      "caller": "the grant issuer",
+      "request": {
+        "grant": "bytes 1-16384, a signed grant (A.5)"
+      },
+      "response": {
+        "grantId": "bytes16",
+        "accepted": "bool"
+      },
+      "errors": [
+        "E_PAL3_GRANT_ISSUER_MISMATCH",
+        "E_PAL3_GRANT_AUTH_FAILED",
+        "E_PAL3_GRANT_INVALID",
+        "E_PAL3_ACCESS_EXPIRED"
+      ]
+    },
+    {
+      "name": "grant.revoke",
+      "capability": null,
+      "caller": "the grant issuer",
+      "request": {
+        "grantId": "bytes16"
+      },
+      "response": {
+        "revoked": "bool"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED",
+        "E_PAL3_INVALID_INPUT"
+      ]
+    },
+    {
+      "name": "identity.state",
+      "capability": null,
+      "caller": "the same hybrid identity",
+      "request": {},
+      "response": {
+        "revocationVersion": "u64",
+        "devices": "array of at most 64 { deviceId: bytes16, name: text 0-64, addedAtMs: u64, revoked: bool }"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED"
+      ]
+    },
+    {
+      "name": "rendezvous.forward",
+      "capability": null,
+      "caller": "a mutual peer",
+      "request": {
+        "to": "bytes32 Ed25519 identity key of the target",
+        "blob": "bytes 1-32768, a sealed signaling blob (section 4)"
+      },
+      "response": {
+        "forwarded": "bool",
+        "duplicate": "bool"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED",
+        "E_PAL3_INVALID_INPUT",
+        "E_BUSY"
+      ]
+    },
+    {
+      "name": "signaling.prekey",
+      "capability": null,
+      "caller": "an authenticated peer",
+      "request": {},
+      "response": {
+        "prekey": "bytes 1-16384, the newest signed signaling prekey of this device (section 4.5)"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED",
+        "E_PAL3_UNSUPPORTED_OP"
+      ]
+    },
+    {
+      "name": "receipt.delivery",
+      "capability": null,
+      "caller": "the message recipient",
+      "request": {
+        "receiptId": "bytes16",
+        "messageId": "bytes 1-64",
+        "deliveredAtMs": "u64",
+        "sigEd25519": "bytes64",
+        "sigMldsa65": "bytes3309"
+      },
+      "response": {
+        "accepted": "bool",
+        "duplicate": "bool"
+      },
+      "signedObject": "pal3-receipt-v1",
+      "errors": [
+        "E_PAL3_AUTH_FAILED",
+        "E_PAL3_INVALID_INPUT"
+      ]
+    },
+    {
+      "name": "swarm.prove",
+      "capability": "swarm.v1",
+      "caller": "any authenticated peer",
+      "request": {
+        "shareId": "text 32 hex",
+        "kind": "pass|ticket",
+        "proof": "bytes (pass) or text (ticket)"
+      },
+      "response": {
+        "ok": "bool",
+        "shareId": "text 32 hex",
+        "expiresAtMs": "u64"
+      },
+      "errors": [
+        "E_SWARM_PROOF_INVALID",
+        "E_SWARM_NOT_REDISTRIBUTABLE",
+        "E_SWARM_NOT_NEGOTIATED",
+        "E_BUSY"
+      ]
+    },
+    {
+      "name": "swarm.have",
+      "capability": "swarm.v1",
+      "caller": "a proven peer",
+      "request": {
+        "shareId": "text 32 hex",
+        "contentId": "text 1-256"
+      },
+      "response": {
+        "contentId": "text",
+        "blocks": "u32",
+        "bitfield": "bytes, bit i (MSB first) set when block i is held"
+      },
+      "errors": [
+        "E_SWARM_PROOF_REQUIRED",
+        "E_SWARM_NOT_NEGOTIATED",
+        "E_PAL3_CONTENT_NOT_FOUND"
+      ]
+    },
+    {
+      "name": "swarm.leaves",
+      "capability": "swarm.v1",
+      "caller": "a proven peer",
+      "request": {
+        "shareId": "text 32 hex",
+        "contentId": "text 1-256",
+        "from": "u32",
+        "count": "u32 1-1024"
+      },
+      "response": {
+        "contentId": "text",
+        "from": "u32",
+        "leaves": "array of bytes32 leaf hashes (8.1)"
+      },
+      "errors": [
+        "E_SWARM_PROOF_REQUIRED",
+        "E_SWARM_NOT_NEGOTIATED",
+        "E_PAL3_INVALID_RANGE",
+        "E_PAL3_CONTENT_NOT_FOUND"
+      ]
+    },
+    {
+      "name": "swarm.sources",
+      "capability": "swarm.v1",
+      "caller": "a proven peer",
+      "request": {
+        "shareId": "text 32 hex",
+        "serve": "optional bool, true opts the caller in",
+        "hints": "optional array of at most 4 { host, port }"
+      },
+      "response": {
+        "sources": "array of at most 16 { edPk, dsaPk, hints, observed }"
+      },
+      "errors": [
+        "E_SWARM_PROOF_REQUIRED",
+        "E_SWARM_NOT_NEGOTIATED",
+        "E_BUSY"
+      ]
+    },
+    {
+      "name": "live.join",
+      "capability": "swarm.v1",
+      "caller": "a proven peer",
+      "request": {
+        "relay": "bool",
+        "capacity": "u8 0-4",
+        "stationId": "text 32 hex",
+        "hints": "optional array of at most 4 { host, port }"
+      },
+      "response": {
+        "depth": "u8",
+        "parent": "null or { edPk: text 64 hex, dsaPk: text hex, hints: array of at most 4 { host, port } } (8.5 item 5)"
+      },
+      "errors": [
+        "E_SWARM_PROOF_REQUIRED",
+        "E_SWARM_NOT_NEGOTIATED",
+        "E_BUSY"
+      ]
+    },
+    {
+      "name": "live.leave",
+      "capability": "swarm.v1",
+      "caller": "a proven peer",
+      "request": {
+        "stationId": "text 32 hex"
+      },
+      "response": {
+        "ok": "bool"
+      },
+      "errors": [
+        "E_SWARM_PROOF_REQUIRED",
+        "E_SWARM_NOT_NEGOTIATED"
+      ]
+    },
+    {
+      "name": "live.rejoin",
+      "capability": "swarm.v1",
+      "caller": "a proven peer",
+      "request": {
+        "lostParent": "text 64 hex or empty",
+        "stationId": "text 32 hex"
+      },
+      "response": {
+        "depth": "u8",
+        "parent": "null or { edPk: text 64 hex, dsaPk: text hex, hints: array of at most 4 { host, port } } (8.5 item 5)"
+      },
+      "errors": [
+        "E_SWARM_PROOF_REQUIRED",
+        "E_SWARM_NOT_NEGOTIATED",
+        "E_BUSY"
+      ]
+    }
+  ],
+  "servedByEmbeddingProduct": [
+    "share.list",
+    "share.manifest",
+    "share.browse",
+    "file.read",
+    "file.readBatch",
+    "media.stream",
+    "have",
+    "sources",
+    "pex.exchange",
+    "buddy.intro",
+    "autonat.dialback",
+    "path.challenge",
+    "path.response",
+    "addr.observe",
+    "sync.offer",
+    "sync.manifest",
+    "sync.push",
+    "sync.ack",
+    "wishlist.poll",
+    "access.request",
+    "access.resolve",
+    "quickdrop.offer",
+    "quickdrop.accept",
+    "chat.message",
+    "chat.receipt",
+    "group.invite",
+    "group.event",
+    "device.sync",
+    "presence",
+    "ping"
+  ]
+}

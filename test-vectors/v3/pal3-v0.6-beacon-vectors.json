@@ -1,0 +1,32 @@
+{
+ "specVersion": "0.6.7",
+ "section": "4 R1 R3 pair beacon keys",
+ "pairBeacon": [
+  {
+   "description": "pair_beacon_key = HKDF-Expand(exporter_secret_0, \"pal3-pair-beacon-v1\", 32); tag = HMAC-SHA-256(HKDF-Expand(pair_beacon_key, \"pal3-lan-v3\", 32), announcer_identity_digest || u64be(floor(unix_sec / 900)))[0..16]; location = HMAC-SHA-256(HKDF-Expand(pair_beacon_key, \"pal3-wan-mailbox-v3\", 32), recipient_identity_digest || u64be(epoch))",
+   "exporterSecret0Hex": "3333333333333333333333333333333333333333333333333333333333333333",
+   "pairBeaconKeyHex": "ee33719b5fe3e3487b244519a9d2d694c64167563993d6bb15db05380e61117a",
+   "unixTimeMs": 1760000000000,
+   "mailbox": [
+    {
+     "recipientIdentityDigestHex": "1111111111111111111111111111111111111111111111111111111111111111",
+     "locationHex": "69b79bc1a3709bdd437ee9c20077e8a76840ebcc0218c8a5adfd294de1564d00"
+    },
+    {
+     "recipientIdentityDigestHex": "2222222222222222222222222222222222222222222222222222222222222222",
+     "locationHex": "e32dda0f0920e82350f36d7a4f373f55cbbe10e29fd37543bb845afaec603eee"
+    }
+   ],
+   "lanTag": [
+    {
+     "announcerIdentityDigestHex": "1111111111111111111111111111111111111111111111111111111111111111",
+     "tagHex": "66b3e985a7e4cf4937561f19a1492d87"
+    },
+    {
+     "announcerIdentityDigestHex": "2222222222222222222222222222222222222222222222222222222222222222",
+     "tagHex": "67f4e38c778a1fa8b9f141d9a4ed2b08"
+    }
+   ]
+  }
+ ]
+}

@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   encodeTlv,
   decodeTlv,
@@ -7,12 +8,16 @@ import {
   sealPal3Record,
   openPal3Record,
   runValidation,
+  runSwarmValidation,
+  runCoreValidation,
+  runPrimitiveValidation,
+  encodePalCbor,
 } from '../validate.mjs';
 
 test('PAL/3.0 normative conformance vectors pass', () => {
   const result = runValidation();
   assert.equal(result.ok, true);
-  assert.equal(result.version, '0.5.0');
+  assert.equal(result.version, JSON.parse(readFileSync(new URL('../test-vectors/v3/pal3-v0.5-vectors.json', import.meta.url), 'utf8')).specVersion);
 });
 
 test('TLV encoder and decoder reject duplicate and out-of-order tags', () => {
@@ -83,4 +88,30 @@ test('Record AEAD rejects sequence mismatch and header AAD tampering', () => {
       expectedChannelSeq: 7,
     })
   );
+});
+
+test('§8.5 swarm offloading vectors pass (redistribution, proofs, E_BUSY, relay tree, swarm.v1)', () => {
+  const result = runSwarmValidation();
+  assert.equal(result.ok, true);
+  assert.equal(result.version, '0.6.0');
+  assert.ok(result.checks >= 20);
+});
+
+test('PAL-CBOR encoder sorts map keys and rejects unsupported values', () => {
+  assert.equal(encodePalCbor({ b: 1, a: 'x' }).toString('hex'), '0900000002000161070000000178000162030000000000000001');
+  assert.throws(() => encodePalCbor({ a: 1.5 }), /E_PAL3_MALFORMED_BODY/);
+});
+
+test('section 7.1 operations are specified and the hybrid-signed objects verify with Ed25519 and ML-DSA-65', () => {
+  const r = runCoreValidation();
+  assert.equal(r.ok, true);
+  assert.equal(r.signed, 3);
+  assert.equal(typeof r.mldsaChecked, 'boolean');
+  assert.ok(r.operations >= 13);
+});
+
+test('BLAKE2b-256 Merkle trees, cookies, proof of work, PSK binder and manifest revision rules match the vectors', () => {
+  const r = runPrimitiveValidation();
+  assert.equal(r.ok, true);
+  assert.ok(r.merkle >= 6);
 });

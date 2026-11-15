@@ -1,7 +1,7 @@
 # PAL/3.0 Post-Quantum Peer-to-Peer Wire Protocol Specification
 
 > **Copyright © 2026 Palexplorer. All rights reserved.**
-> Canonical Specification: `hn2/pal-spec` · Status: **Draft 0.5.2** (2026-11-05)
+> Canonical Specification: `hn2/pal-spec` · Status: **Draft 0.6.11** (2026-11-15)
 > Permission is granted to read, copy, and cite this unmodified specification for security auditing, regulatory review, and interoperable extension development per the LICENSE. All rights to the Palexplorer runtime engine and trademarks are reserved.
 
 PAL/3.0 is an integrated, zero-TCP, post-quantum peer-to-peer protocol. It carries peer discovery, mutual identity authentication with identity protection, capability permissions, Merkle-verified file transfer, low-latency media streaming, delta synchronization, encrypted messaging, and network diagnostics over UDP carriers. A small mandatory core is extended by signed, capability-negotiated extensions (§12).
@@ -20,6 +20,53 @@ PAL/3.0 is an integrated, zero-TCP, post-quantum peer-to-peer protocol. It carri
   - Authenticated PEX (§8.4).
   - Commit-then-reveal SAS (§10.5).
   - Extension sandbox requirements (§12.3).
+
+**Changes in Draft 0.6.11** (2026-11-15): multi-hop relay cells are specified (§15), written from the reference implementation (`hn2/pal-core#337`): the capability `onion/2`, the fixed-size cell layout, the sealed box of each layer, relay processing with a replay key that excludes the padding, fragmentation, and what each party learns. New vector `test-vectors/v3/pal3-v0.6-onion2-vectors.json`. Additive: a peer without `onion/2` sees no change.
+
+**Changes in Draft 0.6.10** (2026-11-15): relay by default, mutual direct consent, address-free peer exchange and full-length SHA-256 identifiers (§14). Peer exchange (§8.4) no longer carries addresses; a peer that still sends them is ignored. New operations `direct.consent`, `direct.endpoint` and `chat.deliver`, the mailbox location key and blob, a statement of what each party learns, and the vector `test-vectors/v3/pal3-v0.6-transport-vectors.json`. The wire form of `pex.exchange` changed in this draft.
+
+**Changes in Draft 0.6.9** (2026-11-15): the private network profile is specified (§13): the profile object, the signed bytes under the context `palexplorer-private-network-v3`, administrator handover, the rules for accepting a profile (signature, version floor, expiry), behavior while a profile is active, lockdown, and a test vector `test-vectors/v3/pal3-v0.6-private-network-vectors.json`. Additive: a peer that does not use a private network sees no change.
+
+**Changes in Draft 0.6.8** (2026-11-10): stateless reset for `c2-cid-v2` connections (§3.2). A responder that has lost its connection state can end a peer's connection quickly instead of leaving it to time out. The reset is sent only for connection IDs of the 8-byte form and a peer that does not implement it simply waits for its idle timeout as before.
+
+**Changes in Draft 0.6.7** (2026-11-10): the LAN beacon tag includes the announcer's identity digest (§4, R1), so the two peers of a pair announce different tags, and §3.2 states the residual linkability of the first packet on a new path. The LAN tag changed in this draft; version 3 pair beacon keys had not shipped before it.
+
+**Changes in Draft 0.6.6** (2026-11-10): the two directions of a pair use different mailbox locations (§4, R3), and `test-vectors/v3/pal3-v0.6-beacon-vectors.json` fixes the pair beacon key, LAN tag and mailbox location derivations, and `test-vectors/v3/pal3-v0.6-prekey-vectors.json` gives a signed prekey that must verify. Mailbox locations for pair beacon keys changed in this draft; version 3 pair beacon keys had not shipped before it.
+
+**Changes in Draft 0.6.5** (2026-11-10): signed signaling prekeys, per-contact beacon keys, a handshake budget per source prefix, rekey limits and a constant-time requirement for long-term-key operations. Written from the reference implementation `@hn2/protocol`. Each change is negotiated or additive, and a peer that implements none of them sees no change.
+- Added: §4.5 signed signaling prekeys. A device publishes short-lived, device-signed key pairs, and `SEALED_HELLO` and signaling blobs sealed to a prekey stay confidential after the static signaling key is compromised. New core operation `signaling.prekey` (§7.1), optional `SEALED_HELLO` tag `0x0004` (§5.1) and optional blob field `prekeyId` (§4).
+- Changed: §4 R1 and R3. Beacon tags and mailbox locations derive from a pair beacon key that both peers compute from their own session, so one contact cannot follow a peer through another contact's key and removing a contact is a local operation. Draft 0.6.4 and earlier announced a single shared beacon key; both forms are accepted during a transition period.
+- Added: §5.4 handshake budget per source prefix, applied after address validation and before any post-quantum operation.
+- Added: §5.3 limits on peer-initiated rekeys and the end of the key epoch space.
+- Added: §3.2 the initiator behavior when an `ACCEPT` fails to verify, so that one forged datagram cannot abort a connection attempt.
+- Added: §11.2 item 7, a constant-time requirement for operations that use a long-term secret on input chosen by an unauthenticated party, and the ML-KEM encapsulation-key check.
+- Editorial: references to private repositories and pull requests were removed from normative text.
+
+**Changes in Draft 0.6.4** (2026-11-10): rotating 8-byte connection IDs, written from the reference implementation.
+- Added: capability `c2-cid-v2`, packet types `0x04` and `0x05`, and frames `0x0C NEW_CONNECTION_ID` and `0x0D RETIRE_CONNECTION_ID` (§3.2, A.4, A.6).
+- Changed: the statement that the connection ID never changes (§3.2). With `c2-cid-v2` both peers change connection ID when a path change is validated, so an observer of two paths cannot link a migrating peer by its connection ID. Peers without the capability see the Draft 0.6.3 wire format.
+
+**Changes in Draft 0.6.3** (2026-11-10): C2 packet key update, resumption ticket contents and control padding, written from the merged reference implementation `@hn2/protocol`.
+- Added: C2 packet type `0x03` and the capability `c2-key-update`: the C2 packet keys rotate with every record-layer rekey (§3.2, §5.1, §5.3, A.4, A.6). A peer that does not list `c2-key-update` sees no change.
+- Changed: plaintext bulk records now require `c2-key-update` and carrier C2, and the statement that they have no forward secrecy is replaced (§6.2).
+- Changed: the resumption ticket holds the SHA-256 hash of the initiator certificate and a resumption count instead of the certificate. Its lifetime is at most 24 hours, and a full handshake follows 7 consecutive resumptions (§5.5). The ticket is opaque to the initiator, so no message the initiator parses changes.
+- Clarified: `CTRL` padding (§6.1) uses random bytes, covers every `CTRL` record after `READY`, and has three stated exceptions. `pad.v1` is advertised by default.
+- Corrected: the authentication-failure limit in §3.2 is the 2^36 that the reference implementation enforces (the 0.6.2 text said 1,000,000).
+
+**Changes in Draft 0.6.2** (2026-11-10): the specification is synchronized with the reference implementation `@hn2/protocol` 5.1.0. No wire change; every edit describes what the implementation already does.
+- Added: §8.1.1 chunk-group verification and `file.outboard`; the `buddy.intro` punch start (§4.1); the BEP44 / Mainline DHT paragraph and the DHT and mailbox value bounds (§4, R3); the PEX wire form and quota (§8.4); §6.2 plaintext bulk records and capability `c2-bulk-plaintext-record` (A.6).
+- Corrected: `CLOSE` frame layout and the `PATH_CHALLENGE`, `PATH_RESPONSE`, `STREAM_RESET` and `STOP_SENDING` frames (§3.2, A.4); the authentication-failure limit and the spoofed-packet statement (§3.2); the proof-of-work cap of 16 bits (§5.4); resumption ticket contents and lifetime (§5.5); the `addr.observe` quorum (§4.1 N3).
+- Added statements on limits: what PAL/3 does not hide (§11.1), what a rekey does and does not restore (§5.3), and the sensitivity of the ticket key (§5.5).
+- Editorial: references to private issue numbers and source file paths were removed.
+
+**Changes in Draft 0.6.1** (2026-11-08): vectors `pal3-v0.6-primitive-vectors.json` for BLAKE2b-256, the Merkle tree and inclusion proofs (§8.1), the cookie and proof of work (§5.4), the resumption secret and binder (§5.5) and the manifest revision rules (§8.2), checked by a zero-dependency BLAKE2b in `validate.mjs`; the validator needs Node 24.7+ for ML-DSA-65.
+
+**Also in Draft 0.6.1** (2026-11-08): capabilities `pad.v1` (`CTRL` records padded to 256-byte buckets, was a SHOULD) and `fec.v1` (C2 `REPAIR` frame 0x0B, XOR parity over 8 data packets); grant `bandwidth_bps` is enforced and `watermark` is declared unsettable (§9); ECN is explicitly not specified (A.4). §7.1 (new) specifies the payloads of `grant.request`, `grant.issue`, `grant.revoke`, `identity.state`, `rendezvous.forward`, `receipt.delivery` and the `swarm.v1` operations, with machine-readable `pal3-v0.6-core-operations.json` and signed-object vectors `pal3-v0.6-core-vectors.json`. The reference implementation serves them as of `@hn2/protocol` 5.1.0. Additive.
+
+**Changes in Draft 0.6.0** (swarm offloading, 2026-11-05). Additive: a peer without `swarm.v1` sees no change.
+- §8.5 (new): swarm offloading — owner-signed redistribution rule, proof of access before any byte from a non-owner, opt-in swarm membership with capped random `swarm.sources`, `E_BUSY` with retry-after and measured-only ranking, live relay tree join/leave/failover, capability `swarm.v1`.
+- §8.6 (new): the share-link ticket is specified, with `redistribution`.
+- §8.2, A.5: manifest key `redistribution`; swarm pass and ticket signed objects. A.6: token `swarm.v1` and the swarm error codes. §12.4: the local limits a swarm peer applies.
 
 **Changes in Draft 0.5.2** (editorial corrections against the reference implementation, `@hn2/protocol` 5.0.0). No wire change; every correction describes what conforming peers already send.
 - §3.2: congestion control and ACK frequency are local sender choices; path validation text matches the implementation (no connection-ID rotation, bounded challenges).
@@ -60,7 +107,7 @@ The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **
 
 | ID | Objective | Acceptance Target | Verification Method |
 |---|---|---|---|
-| O1 | Zero TCP in P2P | Zero TCP sockets during any P2P operation; WebRTC ICE with `enableIceTcp: false` | Static import gate, runtime socket guard, packet capture |
+| O1 | Zero TCP in P2P | Zero TCP sockets during any P2P operation; WebRTC ICE with `enableIceTcp: false` | Static import gate and packet capture. A runtime socket guard is not implemented yet. |
 | O2 | Mandatory hybrid PQC | 100% of sessions use hybrid KEM + hybrid signatures (or a PSK derived from such a session, §5.5). Downgrade, replay, reflection, unknown-key-share, truncation, identity-misbinding and forged-block attacks are rejected | Deterministic vectors (Appendix A), adversarial fault-injection suite |
 | O3 | High-throughput, low-latency | The handshake is 1-RTT before the initiator may send. Cold time-to-first-byte is ≤ 500 ms on a LAN, and a resumed session is ≤ 1 RTT plus one KEM. A single large file on 1 GbE reaches ≥ 100 MB/s over C2 | Multi-platform benchmark harness (loopback + LAN) |
 | O4 | Serverless NAT traversal | ≥ 90% direct UDP across consumer/SOHO NAT pairings, and ≥ 99% with the end-to-end encrypted peer relay (N6) | Network-namespace NAT matrix |
@@ -105,7 +152,7 @@ C2 is a QUIC-style datagram transport over `dgram`.
 **Handshake phase.**
 - Handshake records (`HELLO`, `ACCEPT`, `COOKIE_REQ`, `SEALED_HELLO`) are sent in `INITIAL` packets: `type=0x01 (u8) || conn_id (u32be) || frag_index (u16be) || frag_total (u16be) || payload`.
 - The fragment size is ≤ 1200 bytes, there are at most 64 fragments per handshake record, and reassembly is keyed by `(source address, conn_id)` (§11.2-3).
-- The initiator retransmits `HELLO` with exponential backoff, starting at 250 ms with at most 5 tries. The responder answers a retransmitted `HELLO` with the same `ACCEPT` it cached for that `conn_id`, holding it for at most 10 s.
+- The initiator retransmits `HELLO` with exponential backoff, starting at 250 ms with at most 5 tries. An `ACCEPT` that fails decapsulation, decryption or signature verification is dropped like any other unauthenticated datagram: the initiator keeps its ephemeral secrets and keeps waiting for a valid `ACCEPT` until the attempt times out, so a forged datagram cannot abort a connection attempt. The responder answers a retransmitted `HELLO` with the same `ACCEPT` it cached for that `conn_id`, holding it for at most 10 s.
 
 **Address validation.**
 - Before allocating any session state or doing any post-quantum work for a non-loopback source, a responder MUST validate the source address with the stateless cookie exchange in §5.4.
@@ -113,21 +160,37 @@ C2 is a QUIC-style datagram transport over `dgram`.
 
 **Protected packets.** After the handshake, every packet is a `PROTECTED` packet:
 ```
-type=0x02 (u8) || conn_id (u32be) || protected_pn (4 bytes) || AEAD ciphertext || tag (16)
+type (u8: 0x02, or 0x03 with c2-key-update) || conn_id (u32be) || protected_pn (4 bytes) || AEAD ciphertext || tag (16)
 ```
-- The packet key and IV are `HKDF-Expand(prk_0, "pal3-c2-k-v1" || u16be(0) || dir, 32)` and `HKDF-Expand(prk_0, "pal3-c2-iv-v1" || u16be(0) || dir, 12)`, where `dir` is `"i2r"` or `"r2i"`.
-- Packet keys stay at epoch 0 for the life of the connection. The records inside are rekeyed per §5.3, and a connection closes after 2^20 authentication failures, well inside the ChaCha20-Poly1305 integrity limit.
-- The nonce is `iv XOR (0^4 || u64be(pn))`. The AEAD is ChaCha20-Poly1305, with the 1-byte type, `conn_id` and unprotected `pn` (u32be low bits) as AAD.
+- The packet key and IV of packet key epoch `e` are `HKDF-Expand(prk, "pal3-c2-k-v1" || u16be(e) || dir, 32)` and `HKDF-Expand(prk, "pal3-c2-iv-v1" || u16be(e) || dir, 12)`, where `dir` is `"i2r"` or `"r2i"`. Epoch 0 uses `prk_0`. Epoch `e` > 0 uses `prk_e`, the record-layer key of the rekey that created record epoch `e` (§5.3), so the packet key epoch equals the record key epoch.
+- **Key update (capability `c2-key-update`, §5.1).** When both peers list `c2-key-update`, every record-layer rekey (§5.3) also rotates the packet keys. The low bit of the packet type is the key phase: an even packet key epoch uses type `0x02` and an odd one uses type `0x03`. The type is part of the AAD, so the phase bit is authenticated. Without the capability, a packet of type `0x03` MUST be dropped and the packet keys stay at epoch 0 for the life of the connection.
+  - The packet number is not reset by a key update, and the nonce rule below is unchanged.
+  - The header-protection key (below) is derived once from `prk_0` and never rotates, so a receiver can unmask the packet number before it knows which epoch's key applies.
+  - **Switching.** The rekey initiator switches its send direction to epoch `e + 1` as soon as it has derived `prk_{e+1}`. The rekey responder derives the same keys but keeps sending under epoch `e` until it receives the first authenticated packet of the new phase, because `rekey_resp` and the `REKEY` markers (§5.3) can still be queued and the peer cannot read them under keys it derives only after it has received them. That first authenticated packet also moves the responder's receive direction to epoch `e + 1`.
+  - **Receiving.** A receiver holds the keys of at most three epochs: previous, current and next. A packet whose phase bit matches the current epoch is opened with the current keys. A packet with the other phase bit is tried against epoch `current + 1` if it is installed (a successful open advances the receive epoch) and then against epoch `current - 1` (a packet delayed across the change).
+  - **Retirement.** After the receive epoch advances, the keys of the previous epoch are kept for `max(3 × PTO, 2 s)` so that delayed packets still open, and are then erased. Installing a fourth epoch erases the oldest at once. A sender erases the keys of its previous send epoch when it switches. A packet key update that fails closes the session.
+- A connection closes after more than 2^36 packets that fail authentication (the RFC 9001 section 6.6 forgery limit for ChaCha20-Poly1305). The counter restarts at zero whenever the receive epoch advances.
+- The nonce is `iv XOR (0^4 || u64be(pn))`. The AEAD is ChaCha20-Poly1305, with the unprotected header (the 1-byte type, the connection identifier and the unprotected `pn`, u32be low bits) as AAD. The connection identifier is `conn_id` in the 4-byte form and `dcid` in the 8-byte form below.
 - Header protection follows the QUIC model. `hp_key = HKDF-Expand(prk_0, "pal3-c2-hp-v1" || u16be(0) || dir, 32)`, `sample = ciphertext[0..16]`, and `mask = ChaCha20(hp_key, counter = u32le(sample[0..4]), nonce = sample[4..16])[0..4]`. The packet number is XORed with this mask.
 - Packet numbers are 62-bit per direction and strictly increasing. The receiver reconstructs them from the low 32 bits around the largest acknowledged.
-- Any packet that fails authentication is dropped silently. It never tears down the connection, so spoofed packets cannot reset, stall or acknowledge anything.
+- Any packet that fails authentication is dropped silently. A single spoofed packet never tears down the connection and cannot acknowledge anything. Spoofed packets can close a connection only by exceeding the limit above.
 
-**Frames.** A frame starts with a u8 type. Frame types: `0x01 PADDING`, `0x02 ACK{largest u64, ack_delay_us u32, ranges}`, `0x03 STREAM{channel u8, offset u64, len u16, data}`, `0x04 MAX_DATA{channel u8, max_offset u64}`, `0x05 PING`, `0x06 CLOSE{code u16}`.
+**Connection IDs (capability `c2-cid-v2`).** The 4-byte `conn_id` is fixed for the life of a connection and appears in clear in every packet, so an observer of two network paths can link a peer that migrates between them. When both peers list `c2-cid-v2` (§5.1), each side issues 8-byte connection IDs to the other and every `PROTECTED` packet is addressed with one of them.
+- **Header.** `type (u8: 0x04, or 0x05 under an odd packet key epoch) || dcid (8 bytes) || protected_pn (4 bytes)`. Types `0x04` and `0x05` correspond to `0x02` and `0x03` and follow the same key phase rule. The AAD is the 13-byte unprotected header `type || dcid || pn_low32`. Packet keys, header protection and nonces are unchanged. Handshake packets (`INITIAL`, `COOKIE_CHALLENGE`) keep the 4-byte `conn_id`.
+- **Issuing.** Each side issues two connection IDs to its peer when the handshake completes, using `NEW_CONNECTION_ID{seq u32be, cid 8 bytes, reset_token 16 bytes}` (`0x0C`). Sequence numbers start at 0 and increase by one. An issuer chooses each ID at random and MUST NOT issue an ID that it already routes to any connection. The `reset_token` is carried and stored; stateless reset is not specified in this draft.
+- **Using.** A side sends 4-byte-form packets until it has received the first `NEW_CONNECTION_ID` from its peer, and the 8-byte form afterwards. A receiver finds the connection by the `dcid` of an 8-byte-form packet and by `conn_id` for a 4-byte-form packet.
+- **Retiring.** `RETIRE_CONNECTION_ID{seq u32be}` (`0x0D`) tells the issuer that the ID will not be used again. The issuer stops routing it at once and issues a replacement, so that two issued IDs stay active. A packet already in flight to a retired ID is dropped and recovered by loss detection.
+- **Stateless reset.** The `reset_token` in `NEW_CONNECTION_ID` is `HMAC-SHA-256(reset_key, "pal3-stateless-reset-v1" || cid)[0..16]`, where `reset_key` is a 32-byte secret of the issuing responder; a responder that keeps `reset_key` across restarts can answer for connections it no longer knows. When a responder receives a protected packet of the 8-byte form for a connection ID it does not know, it MAY send one datagram that begins with the 8-byte-form packet type, is filled with random bytes, ends with the reset token for the received ID, and is at least 43 bytes and shorter than the packet that triggered it. A responder sends at most one stateless reset per source address per second. A peer that receives a datagram of at least 43 bytes in the 8-byte form whose last 16 bytes equal, in constant time, a reset token it holds for the connection closes the connection without further messages. No other datagram closes a connection. A reset cannot be forged without the token, which is delivered inside the encrypted connection.
+- **Rotation.** When a path change is validated (below), both sides change ID: the validating side when the challenged address echoes its challenge, and the migrating side when it receives the `PATH_CHALLENGE` for its new path, once per challenged path. A side switches to the lowest-numbered unused ID that its peer issued and sends `RETIRE_CONNECTION_ID` for the one it leaves. When no unused ID is available the rotation is skipped and the current ID stays in use. The rotation happens after validation, so the first packets sent from a new address, up to the path challenge exchange, still carry the previous ID; an observer of both paths can link a migration through that short exchange, but not the connection before or after it.
+- **Violations** (`E_PAL3_C2_FRAME`): a connection ID frame on a connection that did not negotiate `c2-cid-v2`, retiring a sequence number that was never issued, reusing a sequence number for a different ID, and a peer holding more than 4 unretired IDs of ours.
+- A peer without `c2-cid-v2` never sees a packet type, header or frame defined in this paragraph.
+
+**Frames.** A frame starts with a u8 type. Frame types: `0x01 PADDING`, `0x02 ACK{largest u64, ack_delay_us u32, ranges}`, `0x03 STREAM{channel u8, offset u64, len u16, data}`, `0x04 MAX_DATA{channel u8, max_offset u64}`, `0x05 PING`, `0x06 CLOSE{code u8, reason_len u8, reason utf8}`, `0x07 PATH_CHALLENGE{data 8B}`, `0x08 PATH_RESPONSE{data 8B}`, `0x09 STREAM_RESET{channel u8, final_size u64}`, `0x0A STOP_SENDING{channel u8}`, `0x0B REPAIR` (capability `fec.v1`), `0x0C NEW_CONNECTION_ID{seq u32, cid 8B, reset_token 16B}` and `0x0D RETIRE_CONNECTION_ID{seq u32}` (capability `c2-cid-v2`). A sender MUST NOT send a `CLOSE` reason longer than 128 bytes, and cuts it on a UTF-8 character boundary. Byte-exact layouts are in A.4.
 
 **Reliability and congestion.**
 - Loss detection and probe timeouts follow RFC 9002: a packet threshold of 3, a time threshold of 9/8 × max(SRTT, latest RTT), and PTO = SRTT + max(4·RTTVAR, 1 ms) + max_ack_delay. `max_ack_delay` is 25 ms.
 - A receiver acknowledges at least every second ack-eliciting packet for the first 100 packets of a connection, then at least every tenth, and always within 25 ms. It acknowledges immediately on reordering or a gap.
-- Congestion control is a local sender choice and does not affect interoperability. It MUST react to loss at least as conservatively as RFC 9002 §7 NewReno. The reference implementation uses CUBIC (RFC 9438, β = 0.7, C = 0.4) by default, with an initial window of 10 × MSS and pacing. A new path restarts congestion control (RFC 9000 §9.4).
+- Congestion control is a local sender choice and does not affect interoperability. It MUST react to loss at least as conservatively as RFC 9002 §7 NewReno. The reference implementation starts each path with CUBIC (RFC 9438, β = 0.7, C = 0.4), an initial window of 10 × MSS and pacing. Its listener and dialer default to a mode that switches a path to BBR after two loss episodes classified as random when these outnumber the congestive ones; fixed CUBIC, BBR and NewReno are selectable. A new path restarts congestion control (RFC 9000 §9.4).
 - A sender SHOULD occasionally skip a packet number and treat an ACK that covers a skipped or never-sent packet number as a fatal protocol violation (optimistic-ACK defense, RFC 9000 §21.4).
 - Streams are reordered by offset, with a per-channel receive window advertised by `MAX_DATA`.
 
@@ -135,7 +198,7 @@ type=0x02 (u8) || conn_id (u32be) || protected_pn (4 bytes) || AEAD ciphertext |
 - A `PROTECTED` packet from a new source address proves only that its sender holds the keys; the source may be spoofed. A receiver MUST keep sending on the current path until the new address is validated.
 - **Path challenge:** the receiver sends `FR_PATH_CHALLENGE` with 8 random bytes to the new address. The peer echoes them in `FR_PATH_RESPONSE`. The connection moves only when the matching response arrives from that same address.
 - **Bounded probing:** a receiver sends at most one challenge per max(SRTT, 50 ms) per connection and at most 3 challenges per candidate address. A peer queues at most 4 pending path responses.
-- `conn_id` does not change during a connection.
+- Without `c2-cid-v2`, `conn_id` does not change during a connection. With it, both sides change connection ID when a path change is validated (above).
 
 **Efficiency.** Implementations SHOULD batch datagrams, using `sendmmsg`/GSO where available, and use one AEAD pass per packet. Handshake signature and KEM operations SHOULD run off the I/O thread (worker pool).
 
@@ -146,19 +209,23 @@ type=0x02 (u8) || conn_id (u32be) || protected_pn (4 bytes) || AEAD ciphertext |
 
 ## 4. Rendezvous & NAT Traversal
 
-A peer is identified by its **Identity Key** (`Ed25519` 32 B + `ML-DSA-65` 1,952 B), and each machine by a **Device Key** certified by the Identity Key. Each peer also holds a secret 32-byte **Beacon Key**, which it shares with contacts only over an authenticated session (pairing). Rotating the beacon key and re-sharing it with the remaining contacts revokes a former contact's ability to track the peer.
+A peer is identified by its **Identity Key** (`Ed25519` 32 B + `ML-DSA-65` 1,952 B), and each machine by a **Device Key** certified by the Identity Key. Each pair of peers shares a secret 32-byte **Pair Beacon Key**, derived on both sides from their own authenticated session: `pair_beacon_key = HKDF-Expand(exporter_secret_0, "pal3-pair-beacon-v1", 32)`, where `exporter_secret_0` is the epoch-0 exporter secret of §5.2. A full handshake replaces the stored key, and a resumed session (§5.5) keeps it. Because every pair has its own key, no contact can compute the tags that belong to another pair, and removing a contact deletes one key locally without involving anyone else. Draft 0.6.4 and earlier used a single **Beacon Key** shared with all contacts (version 2); see "Transition from version 2" below.
 
 | ID | Mechanism | Normative Behavior |
 |---|---|---|
-| R1 | LAN multicast (`239.255.42.99:52473`) | Announces `tag = HMAC-SHA-256(HKDF-Expand(beacon_key, "pal3-lan-v2", 32), u64be(floor(unix_sec / 900)))` with a 16-byte random nonce. Contacts holding the beacon key match it within ±1 epoch. Others cannot link tags, even if they know the identity public key. |
+| R1 | LAN multicast (`239.255.42.99:52473`) | Announces one 16-byte tag per announced contact: `tag = HMAC-SHA-256(HKDF-Expand(pair_beacon_key, "pal3-lan-v3", 32), announcer_identity_digest || u64be(floor(unix_sec / 900)))[0..16]`, where `announcer_identity_digest` is the identity digest of the announcing peer. The two peers of a pair therefore announce different tags, and an observer cannot link two addresses as contacts by intersecting their tag lists. An announcement carries the tags of at most the 64 most recently seen contacts in random order, followed by random 16-byte filler tags up to the next multiple of 16, so the tag count does not reveal the number of contacts. A contact holding the pair key matches a tag within ±1 epoch. Others cannot link tags, even if they know the identity public key. |
 | R2 | Endpoint cache | Persists the last verified `(ip, port, family, lastSeen)` per device for direct reconnect. |
-| R3 | Serverless WAN mailbox (PAL-DHT) | Stores sealed signaling blobs under `HMAC-SHA-256(HKDF-Expand(beacon_key, "pal3-wan-mailbox-v2", 32), u64be(floor(unix_sec / 900)))`. Stores MUST accept only well-formed sealed envelopes and MUST cap blobs per key, keys, and total bytes. DHT records are bounded at 32 KiB. |
+| R3 | Serverless WAN mailbox (PAL-DHT) | Stores sealed signaling blobs under `HMAC-SHA-256(HKDF-Expand(pair_beacon_key, "pal3-wan-mailbox-v3", 32), recipient_identity_digest || u64be(floor(unix_sec / 900)))`, where `recipient_identity_digest` is the identity digest of the peer that reads the mailbox. The two directions of a pair therefore use different locations, so a peer never reads back its own blobs, and every blob is sealed to its recipient. Stores MUST accept only well-formed sealed envelopes and MUST cap blobs per key, keys, and total bytes. Signed DHT record values are bounded at 30 KiB; mailbox blobs are bounded at 32 KiB. |
 | R4 | Mutual peer introducer | Forwards sealed blobs over `pal3/ctl` (`rendezvous.forward`). It cannot decrypt or forge them. |
 | R5 | Optional server extensions | Self-hosted rendezvous, `@handle` discovery, TURN. |
 
+**Transition from version 2.** A peer announces the version 2 tag (`HMAC-SHA-256(HKDF-Expand(beacon_key, "pal3-lan-v2", 32), u64be(epoch))`, with the shared `beacon_key`) alongside its version 3 tags for a transition period fixed at release (30 days in the reference implementation), and a receiver accepts version 2 tags and mailbox locations (`"pal3-wan-mailbox-v2"`) indefinitely.
+
+**BEP44 / Mainline DHT (normative).** BEP44 storage nodes may reject values whose bencoded form exceeds 1,000 bytes; mutable items use Ed25519 signatures, while immutable items are identified by hash. An ML-DSA-65 signature alone is 3,309 bytes and does not fit in one interoperable BEP44 value. Any BEP44 / Mainline-DHT bridge MUST carry only opaque sealed pointers signed by beacon-derived Ed25519 keys and MUST NOT be treated as an authentication source. Post-quantum authentication happens inside the PAL/3 session. The 30 KiB bound in R3 limits the PAL-DHT value; hybrid signatures and message overhead are additional.
+
 **Signaling blobs.**
 - Replay-cache capacity is partitioned: senders the receiver does not know may use at most 25%, so free Sybil identities cannot lock out contacts.
-- Every blob MUST be hybrid-sealed to the recipient's static signaling keys and hybrid-signed by the sender.
+- Every blob MUST be hybrid-sealed to the recipient's signaling keys and hybrid-signed by the sender. The sender seals to a current signed prekey of the recipient (§4.5) when it holds one, and to the static signaling keys otherwise. A blob sealed to a prekey carries an additional outer field `prekeyId` (8 bytes); a blob without it is sealed to the static keys, exactly as in Draft 0.6.4.
 - A blob carries an outer `timestamp_ms`, bound into the AEAD AAD. Receivers MUST reject a blob outside ±5 min **before** any ML-KEM decapsulation or ML-DSA verification.
 - The inner `(session_id, timestamp_ms)` MUST equal the outer values.
 - The replay cache keyed on `(sender, session_id, signal_seq)` MUST NOT evict an entry while it is still live, and MUST cap entries per sender. When it is full of live entries, new blobs are refused (fail closed).
@@ -166,7 +233,7 @@ A peer is identified by its **Identity Key** (`Ed25519` 32 B + `ML-DSA-65` 1,952
 ### 4.1 NAT Traversal Hierarchy (N1–N7)
 1. **N1, IPv6 direct:** Use global unicast candidates (`2000::/3`, excluding documentation prefixes).
 2. **N2, router port mapping:** Use PCP, NAT-PMP or UPnP-IGD for the muxed port, and detect CGNAT.
-3. **N3, serverless reflexive discovery (`addr.observe`):** Connected peers report the caller's observed source. A reported address is accepted only if it is global unicast and confirmed by ≥ 2 **distinct observer identities** on distinct `/24` (IPv4) or `/48` (IPv6) prefixes. Each identity holds one observation and each prefix holds one observer. Observations expire after 10 min and the table is bounded. Implementations SHOULD prefer observations from contacts.
+3. **N3, serverless reflexive discovery (`addr.observe`):** Connected peers report the caller's observed source. A reported address is accepted into the observation table only if it is global unicast and its port is 1..65535. The reported IP address is treated as confirmed only when at least 2 observers agree on it. Each observer identity holds one observation, and each observer source prefix (`/24` for IPv4, `/48` for IPv6) holds one observer. Observations expire after 10 min, and the table holds at most 64 observers (the oldest is dropped first). A single observation never meets the quorum. Implementations SHOULD prefer observations from contacts. The PAL-DHT node uses a stricter rule for its own external address: at least 3 distinct reporter prefixes (`/16` for IPv4, `/48` for IPv6) that report the same address, with entries kept for 30 min and at most 64 entries.
 4. **N4, simultaneous open:** Paced connectivity checks at 20 ms intervals.
 5. **N5, symmetric NAT port prediction:** Bounded probing with max 64 sockets and ≤ 50 probes/s for 3 s.
 6. **N6, end-to-end encrypted peer relay:**
@@ -175,6 +242,8 @@ A peer is identified by its **Identity Key** (`Ed25519` 32 B + `ML-DSA-65` 1,952
    - The relay forwards opaque `RELAY{session_id, opaque_record}` frames.
    - The path upgrades to direct through authenticated `path.challenge`/`path.response` (an HMAC under the exporter secret that binds the candidate address) and `PATH_SWITCH{switch_id, last_seq}`.
 7. **N7, TURN and UDP 443 fallback:** Optional (off by default).
+
+**Clock-skew-free punch start (`buddy.intro`).** An introducer MUST NOT rely on the two peers' wall clocks agreeing. It measures its round-trip time to each peer (smallest of three `ping` round trips) and computes `lead = max(rtt)/2 + 50 ms` and, per side, `startInMs = lead - rtt_side/2` (RTTs clamped to 2,000 ms). Wire form: the initiator sends `buddy.intro { targetPk }` (64-hex identity key) and receives its plan as the response; the introducer sends the target `buddy.punch { sessionId, peerPk, dialHost, dialPort, punchAtMs, punchToken, startInMs }` at the same moment. Each side starts its probe burst `startInMs` after it *received* the plan, measured on its own clock; `punchAtMs` is the fallback for peers that do not send `startInMs`. `startInMs` is capped at 5,000 ms by the receiver.
 
 ### 4.2 Reachability Tiers & AutoNAT
 - **High ID:** Inbound reachability is verified by port mapping or `autonat.dialback`. These peers can act as introducers (`buddy.intro`).
@@ -188,6 +257,16 @@ Candidates are raced in this order: `lan` > `direct_udp` > `stun_punch` > `udp_4
 A pin is `identity_digest = SHA-256("pal3-identity-v1" || ed25519_pk || mldsa65_pk)` (32 bytes). Every place that pins a peer MUST compare the full hybrid digest. This covers handshake target identities, manifest owners, grant issuers, signaling senders, diagnostic signers, relays and extension roots. Ed25519-only pins are forbidden (D3), because they would let a party that can forge Ed25519 substitute its own ML-DSA key.
 
 ---
+
+### 4.5 Signed Signaling Prekeys
+
+Sealing only to a static signaling key gives no forward secrecy: if that key is stolen later, every recorded `SEALED_HELLO` and signaling blob opens, and with them the candidate addresses and the record of who contacted whom. A device therefore publishes short-lived signed prekeys and keeps the static key as a fallback.
+
+- **Prekey.** An X25519 key pair and an ML-KEM-768 key pair. The public part is the TLV `0x0001 x25519_pk (32 B)`, `0x0002 mlkem_ek (1,184 B)`, `0x0003 created_at_ms (u64be)`, `0x0004 expires_at_ms (u64be)`. `prekey_id = SHA-256(public TLV)[0..8]`.
+- **Signed form.** A PAL-CBOR map `{ pub, sigEd25519, sigMldsa65 }`, where `pub` is the public TLV and both signatures are made by the device keys, verified strict-AND (D3), over `"pal3-prekey-v1" || SHA-256(pub)` with the ML-DSA context `pal3-prekey-v1`. A signed prekey is at most 16 KiB.
+- **Lifetime.** A device creates a new prekey every 7 days. A prekey is valid for at most 14 days: a verifier rejects a prekey whose lifetime exceeds 14 days, that was created more than 5 minutes in the future, or that has expired. A device erases the secret keys of an expired prekey. A sender does not use a cached prekey in the last hour of its validity, so that it cannot expire while a message is in flight.
+- **Distribution.** The core operation `signaling.prekey` (§7.1) is available to authenticated peers only and returns the device's newest signed prekey, or fails with `E_PAL3_UNSUPPORTED_OP` when the device has none. A sender verifies the prekey against the device certificate of the session and caches it per device.
+- **Use.** A sender seals a `SEALED_HELLO` (§5.1) or a signaling blob to the prekey in place of the static signaling key, with the same key derivation, and names the prekey with its `prekey_id`. The responder looks the prekey up by id and rejects an unknown or expired id. Sealing without a prekey is byte-identical to Draft 0.6.4.
 
 ## 5. Session Handshake (1-RTT, Identity-Protected Hybrid SIGMA-I)
 
@@ -214,13 +293,15 @@ READY   R→I (first encrypted record R→I on pal3/ctl): CTRL{op: "ready"}
 - Both signatures cover HELLO, so a stripped or reordered `suite_list` breaks authentication.
 - Every suite in the registry is hybrid (A.6). No negotiation outcome can produce a classical-only session.
 
+**Capability `c2-key-update`.** A peer advertises it by default. It takes effect only when both peers list it, and only on carrier C2: the C2 packet keys then rotate with every record-layer rekey (§3.2, §5.3).
+
 Here `ACCEPT_clear` is the TLV of tags `0x0001..0x0006` of ACCEPT, `identity_body_R` is the encrypted identity TLV without its signature tags, and `finish_body_I` is the FINISH TLV without its signature tags.
 
 **Identity protection.**
 - A passive observer learns neither identity.
 - The initiator reveals its identity only after it has authenticated the responder, so its identity is protected even against an active attacker.
 - The responder reveals its identity to any initiator that completes the KEM. This is the same exposure as TLS 1.3 and Noise XX, and responders that need more SHOULD accept only `SEALED_HELLO` from known contacts.
-- `SEALED_HELLO` (type `0x04`) hybrid-seals the HELLO to the responder's static signaling keys, so it travels opaquely through relays.
+- `SEALED_HELLO` (type `0x04`) hybrid-seals the HELLO to the responder's signaling keys, so it travels opaquely through relays. Its payload is the TLV `0x0001 eph_x25519_pk (32 B)`, `0x0002 mlkem_ct (1,088 B)`, `0x0003 ciphertext` (the HELLO and a 16-byte tag), and optionally `0x0004 prekey_id (8 B)`. The responder resolves the recipient keys by `prekey_id` when tag `0x0004` is present (§4.5) and uses the static signaling keys otherwise. A responder that accepts only known contacts and holds signaling keys SHOULD refuse a plain `HELLO` and accept only `SEALED_HELLO`.
 
 ### 5.2 Cryptographic Rules & Key Schedule
 - **Strict-AND hybrid signatures:** Both `Ed25519` and `ML-DSA-65` (FIPS 204 context `"pal3-hs-v2"`) MUST verify, or the handshake aborts.
@@ -250,12 +331,16 @@ Here `ACCEPT_clear` is the TLV of tags `0x0001..0x0006` of ACCEPT, `identity_bod
 **Exchange.**
 - The exchange is `rekey_init{epoch, x25519_eph, mlkem_ek}` / `rekey_resp{epoch, x25519_eph, mlkem_ct}` on `pal3/ctl`.
 - It derives `prk_{e+1} = HKDF-Extract(salt = exporter_secret_e, ikm = ss_x' || ss_pq' || kem_context')`.
+- **Limits.** A responder accepts at most 16 peer-initiated rekeys in any 60-second window; it checks the limit before any key generation, and the 17th closes the session (`E_PAL3_REKEY_RATE`). Only rekeys initiated by the peer count. The key epoch is a u16: a `rekey_init` for an epoch above 65,535 closes the session, and a side that has reached epoch 65,535 closes the session instead of sending a further `rekey_init` (`E_PAL3_EPOCH_EXHAUSTED`). At 1 Gbit/s and the 32 GiB trigger the epoch space lasts about 200 days; a peer then reconnects.
+- A rekey is authenticated by the current session keys only. It restores secrecy against an attacker who obtained keys and then only observes, but not against one who stays active.
 
 **Simultaneous rekey.** If both sides send `rekey_init` for the same epoch, the session initiator's exchange wins. The initiator ignores the peer's `rekey_init`. The responder abandons its own exchange and answers the initiator's.
 
 **Epoch transition.**
 - Each side sends `REKEY{new_epoch, last_seq}` as its final epoch-`e` record on each channel and resets `channel_seq = 0` for the new epoch.
 - A `REKEY` marker can arrive before the receiver has installed epoch `e+1`, because channels are ordered independently. The receiver MUST then queue that channel's subsequent records, at most 1024, until the epoch is installed. Receiving the marker early MUST NOT be treated as an error.
+
+**C2 packet keys.** With `c2-key-update` negotiated on carrier C2, installing record epoch `e+1` also derives the packet keys of epoch `e+1` from `prk_{e+1}` and flips the key phase of the C2 packet type (§3.2). The initiator sends under the new packet keys at once. The responder keeps its old send phase until it receives the first authenticated packet of the new phase.
 
 ### 5.4 Address Validation & DoS Shield
 1. **Stateless cookies (mandatory for non-loopback sources).**
@@ -264,15 +349,16 @@ Here `ACCEPT_clear` is the TLV of tags `0x0001..0x0006` of ACCEPT, `identity_bod
    - `secret_epoch` rotates every 2 minutes. The previous epoch is accepted.
    - Cookies are single-use per `(port, conn_id)`.
    - No session state or post-quantum operation is performed for an unvalidated source.
+   - **Handshake budget.** After cookie validation and the capacity check, a responder counts handshakes per source prefix (IPv4 /24, IPv6 /48). The default budget is 30 handshakes per minute per prefix, and 0 disables it. A `HELLO` over budget is dropped silently and is not a violation. A `SEALED_HELLO` that opens under the responder's signaling keys is exempt, so known contacts are served first under load. The budget exists because a responder spends an ML-KEM encapsulation and an ML-DSA signature on every source that returns a valid cookie.
    - The HELLO-level `COOKIE_REQ` (`0x03`, 32-byte cookie over `SHA-256(HELLO without cookie)`) is an equivalent stateless retry for carriers without a pre-handshake packet exchange, such as C1.
 2. **Anti-amplification.**
    - A 28-byte challenge is smaller than any INITIAL packet (≥ 33 bytes), so challenges cannot amplify. Pre-validation replies are limited to 3× the received bytes.
    - Challenge budgets exist only to stop non-amplifying reflection. They MUST be generous enough that spoofed floods cannot starve legitimate clients of challenges (per source ≥ 1024 per 10 s).
 3. **Adaptive proof-of-work.**
-   - Under load, `pow_bits` scales from 12 upward, adding 1 bit per doubling of the handshake rate beyond the trigger, up to a cap of 22.
+   - Under load, `pow_bits` scales from 12 upward, adding 1 bit per doubling of the handshake rate beyond the trigger, up to a cap of 16 bits.
    - The solution must satisfy `SHA-256("pal3-pow-v1" || cookie || u32be(conn_id) || u32be(pow_nonce))` ≥ `pow_bits` leading zeros.
    - A wrong solution is dropped and is not counted as a violation.
-   - Clients MUST refuse `pow_bits` > 22 and answer at most 3 challenges per connection attempt, because challenges are unauthenticated.
+   - Clients MUST refuse `pow_bits` > 16 (`E_PAL3_POW_TOO_HARD`) and answer at most 3 challenges per connection attempt, because challenges are unauthenticated.
    - Proof-of-work raises the cost of single-host floods. It is not a defense against botnets.
 4. **Trusted allowlist.** Addresses of known contacts skip proof-of-work only, never the cookie, because an IP address can be spoofed.
 5. **Blackholing.**
@@ -285,20 +371,29 @@ Here `ACCEPT_clear` is the TLV of tags `0x0001..0x0006` of ACCEPT, `identity_bod
 ### 5.5 PSK Resumption
 After a full handshake, the responder MAY issue a `ticket` on `pal3/ctl`:
 ```
-ticket = AEAD(ticket_key, TLV{ resumption_secret, peer identity digest, peer cert hash, issued_at, expires_at (≤ 7 days) })
+ticket = nonce (12) || AEAD(ticket_key, aad = "pal3-ticket-v1",
+                            TLV{ 0x0001 resumption_secret (32B), 0x0003 issued_at (u64be ms), 0x0004 expires_at (u64be ms),
+                                 0x0005 certificate hash (32B), 0x0006 resumption_count (u8) })
+certificate hash = SHA-256(the initiator's full `device_cert`, A.1)
 resumption_secret = HKDF-Expand(prk_0, "pal3-res-v1", 32)
 ```
+- The ticket carries the SHA-256 hash of the initiator's certificate, not the certificate. The responder keeps the full certificates of initiators that completed a full handshake in a bounded cache keyed by that hash (at most 4096 entries, least recently used evicted first, each held for 24 hours from the full handshake). A ticket whose certificate is not in the cache is ignored, and the responder completes a full handshake.
+- `expires_at` is at most 24 hours after `issued_at`, whatever lifetime the issuer asks for.
+- `resumption_count` is 0 in a ticket issued after a full handshake. A ticket issued after a resumed handshake carries the count of the ticket that was used, plus one. A responder MUST ignore a ticket whose count is 7 or more and complete a full handshake, so at most 7 consecutive resumptions follow one full handshake.
 A resuming initiator sends a `HELLO` carrying `psk_ticket` (tag `0x0009`) and `psk_binder` (tag `0x000A`), with fresh `x25519_eph_I` and `mlkem_ek_I`. `psk_binder` is `HMAC-SHA-256(HKDF-Expand(resumption_secret, "pal3-binder-v1", 32), SHA-256(HELLO without binder))`.
 
 On a valid binder for an unexpired, unused ticket, the responder answers with a resumed ACCEPT. It carries `psk_accepted` (tag `0x0007`, u8 `1`) in the clear part and no certificate or signatures. Any other ticket is ignored, and the responder completes a full handshake from the same HELLO. The resumed schedule uses:
 - `prk_hs = HKDF-Extract(salt = th_hs, ikm = ikm || resumption_secret)`, where `th_hs` covers ACCEPT_clear including `psk_accepted`.
 - `encrypted_identity_R` carries `capabilities_R`, `revocation_version_R` and `confirm` (tag `0x0004`) `= HMAC(k_id, th_hs)`.
 - FINISH carries `revocation_version_I` and `finished` (tag `0x0004`) `= HMAC(HKDF-Expand(prk_hs, "pal3-res-fin-v1", 32), SHA-256(HELLO || ACCEPT))`, with no certificate or signatures.
-- Each side uses the peer certificate from the original session: the initiator keeps it, and the responder stores it in the ticket. The certificate is re-checked for expiry.
-- The ticket is delivered after a full handshake as `CTRL{op: "resumption_ticket", ticket}` on `pal3/ctl`.
+- Each side uses the peer certificate from the original session: the initiator keeps it, and the responder looks it up by the hash in the ticket. The certificate is re-checked for expiry.
+- The ticket is delivered after every completed handshake, full or resumed, as `CTRL{op: "resumption_ticket", ticket}` on `pal3/ctl`.
+- The ticket key rotates every 24 hours, and the responder accepts tickets sealed under the previous key. A ticket is usable for at most 24 hours, because `expires_at` is at most 24 hours after issue.
+- A resumed handshake has no signatures. The ticket key and the resumption secret are therefore as sensitive as a device signing key for the ticket lifetime.
 
 **Properties.**
 - Fresh hybrid KEM shares keep forward secrecy and post-quantum confidentiality.
+- Resumption remains visible to an observer: the `HELLO` carries `psk_ticket` and `psk_binder`, and the clear `ACCEPT` carries `psk_accepted`. Hashing the certificate in the ticket and counting resumptions do not hide that a resumption happened.
 - Authentication carries over from the original hybrid-signed session.
 - There is no 0-RTT data, so a replayed HELLO cannot produce a usable session. Data keyed only by `resumption_secret` would have no forward secrecy: a leaked ticket key or resumption secret would expose every recorded payload. Implementations MUST NOT add early data, including as an extension.
 - Tickets are single-use. A responder that issues tickets MUST keep a bounded used-ticket cache until expiry, and MUST NOT accept tickets without one.
@@ -334,7 +429,23 @@ On a valid binder for an unexpired, unused ticket, the responder answers with a 
   - Unencrypted handshake frames: `0x01 HELLO`, `0x02 ACCEPT`, `0x03 COOKIE_REQ`, `0x04 SEALED_HELLO`.
   - Encrypted records: `0x10 CTRL`, `0x11 REQ`, `0x12 RES`, `0x13 DATA`, `0x14 END`, `0x15 CANCEL`, `0x16 CREDIT`, `0x17 ERROR`, `0x18 PING`, `0x19 PONG`, `0x1A REKEY`, `0x1B PATH_SWITCH`, `0x1C RELAY`, `0x1D CLOSE`.
 - **Length rule:** `payload_length` is the plaintext length, and the wire record is exactly `20 + payload_length + 16` bytes.
-- **Metadata:** On C1 the record header is inside DTLS, and on C2 it is inside the packet AEAD (§3.2). Only relays see record headers in the clear, through `RELAY` frames. Senders SHOULD pad `CTRL` records to 256-byte buckets.
+- **Metadata:** On C1 the record header is inside DTLS, and on C2 it is inside the packet AEAD (§3.2). Only relays see record headers in the clear, through `RELAY` frames. `pad.v1` (A.6) is advertised by default. When both peers negotiated it, a sender MUST pad every `CTRL` record sent after `READY` by adding a byte string under the map key `pad` so that `payload_length` is a multiple of 256; a receiver ignores `pad`. The reference implementation fills `pad` with random bytes; the record is encrypted, so the content is not significant. Three cases are not padded: the handshake `FINISH` and `READY` records, which are TLV and not maps; a map that already contains a `pad` key, which is sent unchanged; and a map whose encoding is longer than 65,536 − 256 bytes, so that padding never exceeds `MAX_CONTROL_PAYLOAD`. Without `pad.v1` no `CTRL` padding is applied.
+
+### 6.2 Plaintext bulk records (optional capability `c2-bulk-plaintext-record`)
+
+This capability lets a sender omit the record AEAD on bulk data when the path is direct, because every block is verified against the signed Merkle root (§8.1) and C2 already encrypts and authenticates every packet (§3.2).
+
+- **Flag:** record header flag `0x80` (`FLAG_PLAINTEXT`). A record with this flag has no 16-byte tag. Its wire length is `20 + payload_length`, and the payload follows the header unencrypted at the record layer. The `key_epoch` and `channel_seq` rules of §6.1 apply unchanged.
+- **Where it is allowed:**
+  - Only `DATA` records, and only on `pal3/bulk/0` and `pal3/bulk/1` (channels 2 and 3).
+  - Only when both peers negotiated `c2-bulk-plaintext-record` and `c2-key-update` (A.6), and only on carrier C2. Without `c2-key-update`, or on any other carrier, `DATA` records are always sealed.
+  - Only while the active path kind is `lan`, `direct_udp` or `stun_punch` (§4.3). A sender checks this before every plaintext record, and stops sending plaintext records as soon as the path stops being direct.
+- **Receiver:** a receiver accepts plaintext `DATA` records only on a stream that it opened for a block or batch read verified against a trusted Merkle root. After the active path stops being direct, the receiver keeps accepting plaintext records that were already in flight for a drain window of 3 seconds. A plaintext record on trailing data of a stream the receiver already cancelled or finished is discarded.
+- **Errors:** any other plaintext record closes the session (`E_PAL3_PLAINTEXT_FORBIDDEN`). That includes the flag on a non-`DATA` record, on a channel other than `pal3/bulk/0..1`, without the negotiated capability, or outside the drain window on a non-direct path.
+
+**Security considerations.**
+- With this mode, bulk data is protected only by the C2 packet keys. When `c2-key-update` is negotiated, which this mode requires, those keys rotate with every session rekey (§5.3). Keys of an earlier epoch are erased after the retirement window in §3.2, so a later compromise of the current keys does not expose bulk data that was sent under erased keys. Bulk data sent between two rekeys shares one set of packet keys, so the rekey triggers of §5.3 bound the amount.
+- The mode MUST NOT be used on carrier C1 or on any relayed path.
 
 ---
 
@@ -342,8 +453,24 @@ On a valid binder for an unexpired, unused ticket, the responder answers with a 
 
 - **Requests:** Each request uses a directional `stream_id` (odd for the initiator, even for the responder, 0 for control), an ASCII operation name of ≤ 128 bytes, and a deterministic binary body.
 - **Credit flow control:** Receivers grant credits with `CREDIT{credit}` (bytes granted). The initial window is 512 KiB per stream, auto-tuned up to 16 MiB from RTT × throughput. The cap is 64 MiB per connection across all streams. Sending beyond granted credit is fatal.
-- **Core operations:** `share.list`, `share.manifest`, `share.browse`, `file.read`, `file.readBatch`, `media.stream`, `have`, `sources`, `pex.exchange`, `buddy.intro`, `autonat.dialback`, `path.challenge`, `path.response`, `identity.state`, `addr.observe`, `rendezvous.forward`, `sync.offer`, `sync.manifest`, `sync.push`, `sync.ack`, `wishlist.poll`, `access.request`, `access.resolve`, `quickdrop.offer`, `quickdrop.accept`, `chat.message`, `chat.receipt`, `group.invite`, `group.event`, `device.sync`, `grant.request`, `grant.issue`, `grant.revoke`, `receipt.delivery`, `presence`, `ping`.
-- **Extensions:** All other operations (for example `diag.*`, `live.*`, `buddy.relay`, `sign.*`, `msg.deliver`, `drop.offer`) are extension operations (§12), and each is registered with a capability and a permission verb.
+- **Core operations:** `share.list`, `share.manifest`, `share.browse`, `file.read`, `file.readBatch`, `media.stream`, `have`, `sources`, `pex.exchange`, `buddy.intro`, `autonat.dialback`, `path.challenge`, `path.response`, `identity.state`, `addr.observe`, `rendezvous.forward`, `signaling.prekey`, `sync.offer`, `sync.manifest`, `sync.push`, `sync.ack`, `wishlist.poll`, `access.request`, `access.resolve`, `quickdrop.offer`, `quickdrop.accept`, `chat.message`, `chat.receipt`, `group.invite`, `group.event`, `device.sync`, `grant.request`, `grant.issue`, `grant.revoke`, `receipt.delivery`, `presence`, `ping`.
+
+### 7.1 Payloads of the Operations Defined Here
+
+Request bodies and response results are PAL-CBOR maps (A.3). The machine-readable form is `test-vectors/v3/pal3-v0.6-core-operations.json`, and `npm run validate` checks that every name in the core list above is either specified there or served by the embedding product. In every operation the caller is the identity of the authenticated session; no body field names the caller. Handlers MUST fail closed: an operation whose backing state the node does not keep answers `E_PAL3_UNSUPPORTED_OP`.
+
+| Operation | Request | Response | Rules |
+|---|---|---|---|
+| `grant.request` | `resource` (text ≤ 256), `operations` (1–8 permission verbs), optional `note` (≤ 256) | `requestId` (16 B), `status = "pending"` | Any authenticated peer. The node queues at most 8 pending requests per identity and 256 in total (`E_BUSY` beyond), and answers a repeat of the same resource and verbs with the same `requestId`. A request never grants anything. |
+| `grant.issue` | `grant` (signed grant, A.5, ≤ 16 KiB) | `grantId`, `accepted` | The grant MUST verify (`E_PAL3_GRANT_AUTH_FAILED`), MUST be signed by the identity of this session (`E_PAL3_GRANT_ISSUER_MISMATCH`), MUST name this identity or `identity_key ‖ device_id` of this device (`E_PAL3_GRANT_INVALID`), and MUST NOT be expired (`E_PAL3_ACCESS_EXPIRED`). |
+| `grant.revoke` | `grantId` (16 B) | `revoked` | Only the identity that issued the grant may revoke it (`E_PAL3_ACCESS_DENIED`). Revocation aborts active streams under the grant immediately (§9). An unknown `grantId` answers `revoked = false`. |
+| `identity.state` | empty | `revocationVersion` (u64), `devices` (≤ 64 of `deviceId`, `name`, `addedAtMs`, `revoked`) | Only the same hybrid identity digest (§4.4) may ask (`E_PAL3_ACCESS_DENIED`). |
+| `rendezvous.forward` | `to` (32 B identity key), `blob` (1–32768 B sealed signaling blob, §4) | `forwarded`, `duplicate` | The introducer (R4) forwards only to a mutual peer (`E_PAL3_ACCESS_DENIED`), never opens the blob, drops a blob it forwarded in the last 5 minutes (`duplicate = true`) and accepts at most 30 forwards per identity per minute (`E_BUSY`). |
+| `signaling.prekey` | none | `prekey`: the newest signed signaling prekey of this device (§4.5), at most 16 KiB | Authenticated peers only (`E_PAL3_ACCESS_DENIED` otherwise). `E_PAL3_UNSUPPORTED_OP` when the device publishes no prekey. |
+| `receipt.delivery` | `receiptId` (16 B), `messageId` (≤ 64 B), `deliveredAtMs` (u64), `sigEd25519`, `sigMldsa65` | `accepted`, `duplicate` | The receipt is a hybrid-signed object (A.5, domain and ML-DSA context `pal3-receipt-v1`) over the PAL-CBOR map `{v: 1, receiptId, messageId, deliveredAtMs, recipientEdPk, recipientDsaPk}` with the keys of the session identity. `deliveredAtMs` may be at most 5 minutes in the future (`E_PAL3_INVALID_INPUT`). A bad signature answers `E_PAL3_AUTH_FAILED`. A repeated `receiptId` from the same identity is accepted once. |
+| `swarm.prove`, `swarm.have`, `swarm.leaves`, `swarm.sources`, `live.join`, `live.leave`, `live.rejoin` | see §8.5 and the JSON file (`live.*` name the station with `stationId`) | see the JSON file (`live.join` and `live.rejoin` answer `{ depth, parent: { edPk, dsaPk, hints } }` as in §8.5) | Require `swarm.v1` on both sides (`E_SWARM_NOT_NEGOTIATED`). Every operation except `swarm.prove` needs a proven session (`E_SWARM_PROOF_REQUIRED`). `swarm.leaves` returns at most 1024 leaf hashes per request. `swarm.sources` from a peer with `serve = true` opts that peer into the membership list under its session identity, never one named in the body. |
+
+- **Extensions:** All other operations (for example `diag.*`, `buddy.relay`, `sign.*`, `msg.deliver`, `drop.offer`) are extension operations (§12), and each is registered with a capability and a permission verb.
 
 ---
 
@@ -356,6 +483,15 @@ On a valid binder for an unexpired, unused ticket, the responder answers with a 
 - **Node:** `BLAKE2b-256(0x01 || u8(level) || left || right)`. An unpaired rightmost node is promoted unchanged.
 - **Content ID:** `pal3:b2t:<root-hex-64>:<size-decimal>`.
 - **Pre-write verification:** Receivers MUST verify the index bounds, the exact length and the inclusion proof against the signed `(root, size)` before writing.
+
+### 8.1.1 Chunk-Group Verification (optional)
+Receivers MAY verify at 16 KiB granularity. This is additive: `pal3:b2t` content IDs and leaf hashes are unchanged, and receivers without a `chunkRoot` verify whole blocks as in 8.1.
+- Chunks are 16 KiB; each 256 KiB block has a sub-tree over up to 16 chunk-leaf hashes, giving `blockChunkRoot_i`. `chunkRoot` is a binary Merkle tree over all `blockChunkRoot_i` (unpaired nodes promoted, as in 8.1).
+- BLAKE2b-256 with domain bytes `0x10` chunk leaf (`0x10 || u64be(global_chunk_index) || u32be(len) || chunk`), `0x11` chunk node (`0x11 || u8(level) || left || right`), `0x12` block-chunk node (same layout). The empty-file `chunkRoot` is `BLAKE2b-256(0x12 || 0x00 || u64be(0))`.
+- `chunkRoot` (32 B) is an optional field of a file entry in the hybrid-signed manifest (8.2), so the publisher signature binds it.
+- Per block the sender supplies an outboard: the chunk-leaf hashes (up to 16 x 32 B) followed by the inclusion proof of `blockChunkRoot_i` in `chunkRoot` (about 0.2% overhead). The receiver MUST authenticate the outboard against the signed `chunkRoot` before using it, MUST verify each chunk's length, index and hash, and still verifies the completed block against its 8.1 leaf hash.
+
+**Wire form.** Operation `file.outboard` (requires the same read permission as `file.read`): request `{ contentId, blockIndex }`, response `{ outboard }` where `outboard` is the chunk-leaf hashes (`ceil(blockLen / 16 KiB)` x 32 B) followed by the proof siblings of `blockChunkRoot_i` in `chunkRoot` (32 B each; counts are implied by the content size and block index). A sender without an outboard answers `E_PAL3_NO_OUTBOARD` (or `E_PAL3_UNSUPPORTED_OP` if it predates the operation); the receiver then falls back to whole-block verification. A receiver that holds a signed `chunkRoot` fetches the outboards of the requested block range before the `file.read`, rejects the read with `E_PAL3_CHUNK_OUTBOARD_INVALID` if any outboard does not authenticate against `chunkRoot`, and aborts the stream with `E_PAL3_CORRUPT_CHUNK` at the first 16 KiB chunk that fails, before the rest of the block is received.
 
 ### 8.2 Hybrid-Signed Manifests, Rollback & Equivocation
 - **Signing:** Manifests are signed by the owner's hybrid identity under context `"pal3-manifest-v1"`. Each carries `revision_counter (u64)` and `author_device_id (16B)`.
@@ -385,6 +521,44 @@ On a valid binder for an unexpired, unused ticket, the responder answers with a 
    - Third-party entries may add unknown peers but MUST NOT overwrite a known peer's address. Their self-reported High-ID and piece counts MUST be ignored for ranking.
    - Hosts MUST be global unicast, unless a LAN-only swarm explicitly allows private addresses.
    - Tables are bounded with a TTL.
+   - **Wire form:** request `{ rootHash }` (64 hex), response `{ peers: [{ peerPk }] }` with at most 32 entries and no address fields (§14.3); `peerPk` is the peer's 64-hex identity Ed25519 key. Entries learned this way are unverified and attributed to the responding peer.
+   - **Quota and promotion:** a table keeps at most 16 live unverified entries per reporter per swarm (extra reports are dropped). An entry is promoted to verified only after an authenticated session whose identity equals `peerPk` succeeds; an entry is dropped after 2 failed dials, timeouts or identity mismatches.
+
+### 8.5 Swarm Offloading (`swarm.v1`)
+
+Peers that hold verified pieces of a share MAY serve them to other peers, so the owner or a station server carries less. The mechanism below is wire protocol, so every client interoperates. How much a device serves is local policy (§12.4).
+
+1. **Redistribution rule.**
+   - The owner signs a `redistribution` key into the manifest body (§8.2, A.5) and into each share-link ticket (§8.6). Values: `none`, `pals`, `link-holders`. An absent or unknown value is `none`, so a manifest signed before this draft is never swarmed.
+   - Defaults: a private (encrypted, §8.3) share is `none`; a share readable only by named pals or groups is `pals`; a public link share or a station is `link-holders`. The owner MAY lower the rule; it MUST NOT be wider than who may read the share.
+   - The rule in force is the one in the newest manifest revision the seeder verified (§8.2). A peer MUST NOT serve pieces of, announce itself for, or list sources of a `none` share.
+2. **Proof of access.** A non-owner seeder sends no byte of a share to a peer that has not proved access on the same session.
+   - `swarm.pass` (owner → reader): the owner issues a swarm pass only to a peer its §9 rules allow to read the share. The pass is a hybrid-signed object (A.5) bound to the reader's full hybrid handshake identity (both holder public keys), valid for at most 10 minutes (60 s clock skew allowed).
+   - `swarm.prove { shareId, kind, proof }` (requester → seeder): `kind` is `pass` or `ticket`. The seeder verifies the proof against the owner keys in its own verified manifest of that share — never keys supplied by the requester. A pass MUST carry both holder public keys and both MUST equal the session's authenticated handshake keys (§4.4); a pass naming only the Ed25519 key is invalid, because an Ed25519-only identity pin is forbidden. A `pals` share accepts only a pass; a `link-holders` share accepts a pass, or a valid unexpired ticket (§8.6) whose own `redistribution` is `link-holders`. The owner can therefore mint links that do not open the swarm.
+   - A proof is bound to the session until its expiry or the end of the session. When the rule in force narrows, proofs that no longer qualify are dropped.
+   - Swarm reads — `swarm.have`, `swarm.leaves`, `swarm.sources` and pieces via `media.stream` with resource `swarm:<shareId>:<contentId>` — without a proven session fail with `E_SWARM_PROOF_REQUIRED`. The owner keeps answering under §9 as before.
+   - A seeder MUST rate-limit `swarm.prove` (at most 8 attempts per session per minute), because each attempt costs a hybrid signature check.
+3. **Swarm membership (`swarm.sources`).**
+   - Request `{ shareId, serve, hints }`. `serve: true` announces that the requester serves this share; `serve: false` withdraws at once. Only peers that announced `serve: true` within the last 3 minutes are listed. A peer that only listens or downloads is never listed.
+   - The answer holds at most 16 entries `{ edPk, dsaPk, hints, observed }`, drawn at random from the opted-in peers. It never contains the requester. A table holds at most 256 peers per share (LRU and TTL, §11.2).
+   - A node answers a given (peer, share) at most once every 20 s; earlier requests get `E_BUSY` (item 4). A list therefore cannot be used to enumerate a station's listeners.
+   - Answering requires the same authorisation as reading the share: §9 on the owner, a proven session (item 2) on a seeder. The PEX rules of §8.4 apply to the entries.
+4. **Busy signal.**
+   - `E_BUSY` carries `retryAfterMs`, clamped to 100…60 000. In the text-only `ERROR` record (A.5) the form is `E_BUSY: retry after <n> ms`. A seeder sends it when it has no free upload slot, is over its rate limit, or is paused by local policy; it does not say which.
+   - The requester MUST NOT ask that peer again before `retryAfterMs` has passed, and SHOULD move the piece to another source at once.
+   - Source ranking MUST use only values the requester measured itself: throughput of completed, verified pieces and the session RTT. Self-reported speeds, piece counts and High-ID claims are ignored. A requester SHOULD try the owner or station server only after the peers that have the piece.
+5. **Live relay tree** (`live.join`, `live.leave`, `live.rejoin`, live stations).
+   - `live.join { stationId, relay, capacity }`. The root assigns the joiner the shallowest node that opted in to relay (`relay: true`) and has a free slot. A node's fan-out is min(4, its offered `capacity`); the root's fan-out is its own choice. Depth is at most 8.
+   - The join answer names only the joiner's parent `{ edPk, dsaPk, hints }` and its depth. The root MUST NOT return the tree topology or other listeners' identities.
+   - `live.leave`: the root moves the leaver's children, with their subtrees, to the shallowest free relays; a child that does not fit is told to join again later (`E_BUSY`).
+   - Failover: a child that receives no chunk from its parent for 3 s sends `live.rejoin { lostParent }`. The root moves the child (and its subtree) under another parent and assigns the lost parent no new children for 30 s. Reports from two distinct children remove the lost parent. A node without a heartbeat for 15 s is removed.
+   - A relay that cannot take a child answers it `E_BUSY`; the root then assigns another parent.
+6. **Capability negotiation.** All `swarm.*` operations, `swarm:` resources and the relay fields above require the `swarm.v1` token on both sides of the session (A.6); otherwise they fail with `E_SWARM_NOT_NEGOTIATED`. The owner issues no pass to, and lists no source for, a peer without `swarm.v1`, and serves it through the normal `share.*`, `file.read` and `media.stream` operations. A client without swarm support keeps working.
+7. **Errors:** `E_BUSY`, `E_SWARM_PROOF_REQUIRED`, `E_SWARM_PROOF_INVALID`, `E_SWARM_NOT_REDISTRIBUTABLE`, `E_SWARM_NOT_NEGOTIATED`. Each piece received from the swarm is checked against the manifest's Merkle root before it is played, cached or forwarded (§8.1, §8.4).
+
+### 8.6 Share-Link Tickets
+
+A share link (`pal3://share/<token>`) carries an owner-signed ticket. `token` is the base64url (no padding) PAL-CBOR map `{ body, sigEd25519, sigMldsa65 }`, signed with context `pal3-share-ticket-v1` (A.5), at most 16 KiB. `body` is `{ v: 1, shareId (16B), ownerEdPk (32B), ownerDsaPk (1952B), manifestRoot (32B, or empty), hints (array of "host|port", at most 8), issuedAtMs (u64), expiresAtMs (u64), redistribution }`. A reader verifies both signatures and the expiry, and pins the owner keys from the ticket when it fetches the manifest. An optional `#k=` fragment carries a share key and is never sent on the wire.
 
 ---
 
@@ -393,6 +567,9 @@ On a valid binder for an unexpired, unused ticket, the responder answers with a 
 - **Subjects:** `identity`, `device`, `group`, `link-capability` (bound to the first authenticated claimant), `password` (Argon2id-wrapped share key), `anonymous`.
 - **Operations:** `list`, `read`, `stream`, `write`, `delete`, `reshare`, `chat`, `sync`, `relay`.
 - **Constraints:** `expires_at_ms`, `not_before_ms`, `max_reads`, `max_bytes`, `bandwidth_bps`, `devices_max`, `time_window_utc`, `watermark`.
+  - `expires_at_ms`, `not_before_ms` and `time_window_utc` are enforced at every block boundary, and a stream blocked on credit is aborted when the grant expires or its time window closes.
+  - `bandwidth_bps` is a sender-side token bucket shared by all streams under the grant (burst capacity `max(bandwidth_bps, 64 KiB)`). A grant with value 0 is not paced. Revocation wakes a paced sender at once.
+  - `watermark` MUST NOT be set: every block is verified against the signed Merkle root (§8.1), so a per-recipient mark inside the protocol would make the block fail verification. Issuers MUST NOT set it and verifiers MUST refuse a grant that does (`E_PAL3_GRANT_UNSUPPORTED_CONSTRAINT`). Watermarking is an application concern above the protocol.
 - **Default deny:** A session without a permission manager MUST deny every request. Implementations MAY offer an explicit opt-out for trusted loopback testing only. Extension operations MAY declare `authenticatedOnly` (any handshake-authenticated peer, no grant), but only if they are cheap and reveal no personal data.
 - **Server-derived resources:** For `file.read`, `media.stream` and `file.readBatch`, the authorized resource is derived by the server from the requested `contentId`: `root:<contentId>` plus the share paths that contain it. A client-supplied resource string is never trusted. Every file in a batch is authorized before any byte is sent.
 - **Caller identity:** The caller's identity is always the handshake-verified certificate, never a value in the request body.
@@ -437,8 +614,9 @@ On a valid binder for an unexpired, unused ticket, the responder answers with a 
 - **Session keys:** Every session key depends on both `ss_x25519` and `ss_mlkem768`. Breaking X25519 with a quantum computer is insufficient, because ML-KEM-768 (FIPS 203, Category 3) must also be broken.
 - **Symmetric keys:** The 256-bit ChaCha20 keys keep about 128-bit security against Grover's algorithm.
 - **Ephemeral secrets:** Ephemeral secrets are zeroized after derivation, and automatic rekey mixes fresh hybrid entropy. A later compromise of long-term keys does not reveal recorded sessions.
-- **Identity metadata:** Identities and beacon tags are protected (§4, §5), so recorded traffic does not reveal who talked to whom.
+- **Identity metadata:** Identities and beacon tags are protected (§4, §5). Beacon tags and mailbox locations are derived per pair, so they cannot be linked across contacts, and signaling sealed to a prekey (§4.5) stays closed after the static signaling key is compromised, so recorded traffic does not reveal who talked to whom.
 - **Password-only shares:** Shares protected only by a password rely on Argon2id. Passphrases SHOULD have ≥ 75 bits of entropy.
+- **Limits:** PAL/3 hides identities and rendezvous tags. It does not hide that PAL/3 is in use, packet sizes, timing, or transfer sizes.
 
 ### 11.2 Normative Hardening Invariants
 1. **Low-order points:** Every X25519 operation rejects all-zero shared secrets.
@@ -449,9 +627,23 @@ On a valid binder for an unexpired, unused ticket, the responder answers with a 
    - An inconsistent `total` drops only that packet.
    - Non-final fragments must be full-size, and entries expire after 5 s.
    - UDP servers MUST NOT allocate sessions for stray data packets.
-4. **Revocation and credit bounds:** Revocation cuts off a device immediately. Peer credit is clamped to 16 MiB. Block lengths and ranges are validated.
+4. **Revocation and credit bounds:** Revocation (section 11.3) cuts off a device as soon as a peer holds the signed list; it does not stop a party that holds the identity key. Peer credit is clamped to 16 MiB. Block lengths and ranges are validated.
 5. **URI validation and quarantine:** `pal://` and `pal3://` parsers reject decoded `/`, `\`, `:`, `.`, `..` and control bytes. Received executables are never launched directly, and they are stamped with Mark-of-the-Web.
 6. **Bounded state:** Every peer-influenced table is bounded with LRU and TTL. This covers shield sources, bans, cookies, the replay cache, mailboxes, PEX, reflexive observations and reassembly.
+7. **Constant-time long-term-key operations:** An operation that uses a long-term secret on input chosen by an unauthenticated remote party SHOULD run on a constant-time implementation. In this protocol those are ML-KEM decapsulation with a signaling key (`SEALED_HELLO`, signaling blobs) and the ML-DSA signature that a responder makes in every `ACCEPT`. An ML-KEM encapsulation key received from a peer MUST pass the FIPS 203 modulus check before use. The reference implementation uses the ML-KEM-768 and ML-DSA-65 of the platform runtime where the runtime provides them and a pure-JavaScript library otherwise.
+
+### 11.3 Device Enrollment and Revocation
+
+An identity is the Ed25519 and ML-DSA-65 key pair that names it (handle, pals, shares). A *device* is one machine of that identity. This section is normative for implementations that let one identity run on several machines.
+
+1. **Per-device keys.** Each device MUST generate its own Ed25519 and ML-DSA-65 key pair and a random 16-byte `device_id` (it MUST NOT derive the `device_id` from the identity key). The identity key signs a delegated `device_cert` (`flags = 0x00`, Appendix A.1) that binds the device keys and the `device_id` to the identity. The device signs the handshake with its device keys; peers verify the delegated certificate against the identity key they already trust for that peer. The identity key, and with it the peer's trust, does not change.
+2. **Enrollment and migration.** A device that has only used the self-certified form (`flags = 0x01`, `device_id` derived from the identity key) enrolls itself the first time it loads its identity: it generates device keys and a `device_id`, issues its own delegated certificate (the identity secret key is present on the device) and keeps the `device_id` for its lifetime. Certificates are renewed before `expires_at_ms` with the same `device_id`. Peers that have not been told about revocation continue to accept both forms.
+3. **Revocation statement.** The identity signs a statement (Appendix A.1, `revocation_statement`) over `{identity_ed25519_pk, identity_mldsa65_pk, revocation_version (u64), issued_at_ms, revoked_device_ids}` with both algorithms (domain `pal3-revocation-v1`). `revocation_version` strictly increases with every change and `revoked_device_ids` is the full set (a later statement supersedes an earlier one; devices are never un-revoked by omission within the same version).
+4. **Verification and storage.** A receiver MUST verify both signatures and that the statement issuer equals the identity key it already trusts for the sender (it MUST NOT accept a statement for another identity). It keeps, per identity, the statement with the highest valid version. A statement whose version is lower than or equal to the stored one MUST NOT be applied, so an old statement cannot roll a revocation back.
+5. **Distribution.** The identity owner pushes its statement to connected peers (`device.revocation.push`, body `{ statement: base64 }`, the sender MUST be the identity itself) and answers `device.revocation.get` (body `{}` returns the statement of the responder's own identity; `{ identity }` returns the stored statement of that identity). A peer SHOULD request the statement of a peer identity when it connects, at most every ten minutes. Both operations require the caller to be a pal.
+6. **Enforcement.** After the certificate is verified, in both handshake roles and before any application request, a peer MUST close the session when the certificate's `device_id` is in the stored `revoked_device_ids` of its identity. Open grant leases of that device abort at the next 256 KiB block check (section 9). Once a receiver holds any revocation statement for an identity it MUST also refuse that identity's self-certified certificates, because their `device_id` cannot be revoked separately.
+7. **`revocation_version` in the handshake.** A device advertises the highest revocation version it knows for its own identity in `revocation_version_R` / `revocation_version_I`; a receiver MAY refuse a lower value than it already holds for that identity (`E_PAL3_STALE_REVOCATION`).
+8. **Security considerations.** Revocation removes a device's certificate, not the identity key. Because every device of an identity holds the identity key (needed to enroll devices and to recover), a party that extracts the identity key can enroll a new device with a new `device_id`; revocation cannot prevent that, and the identity SHOULD be replaced if the identity key may be exposed. Implementations MAY keep the identity secret key only on designated owner devices, in which case other devices hold only device keys and a certificate issued at pairing; this is outside the requirements above.
 
 ---
 
@@ -478,6 +670,256 @@ PAL/3 keeps the core small and moves everything else into extensions. Extensions
 
 Implementations have local settings, such as pacing, compression, packet padding, resume journals and inbound or outbound firewall policy. These are not wire protocol and are not negotiated. A local setting MUST NOT change the handshake, the cipher suite, the key schedule or the record format, and turning one off MUST NOT weaken a session's cryptography. A local policy that refuses a peer or an operation does so with the normal error records (§6.1, §9).
 
+A swarm peer (§8.5) typically offers these local limits; none is negotiated, and a refusal is always `E_BUSY` so the reason is not disclosed: upload rate overall and per peer; upload slots; piece-cache size; daily and monthly caps on metered networks (a phone SHOULD default to serving on Wi-Fi only); a battery threshold or serving only while charging; a per-share "do not share"; a privacy mode that serves nothing and announces nothing (`serve: false`); and using the owner or station server only as a last resort.
+
+---
+
+## 13. Private Network Profile
+
+A private network confines a client to one administrator's discovery servers, relays and members. One signed profile describes it. This section is normative unless marked informative. The vector `test-vectors/v3/pal3-v0.6-private-network-vectors.json` gives a profile, a handover, their keys and the exact signed bytes.
+
+### 13.1 Profile Object
+
+A profile is a JSON object with these fields.
+
+| Field | Type | Rule |
+|---|---|---|
+| `name` | string | At most 128 characters. |
+| `admin` | string | 64 hexadecimal characters: the administrator's Ed25519 public key. |
+| `discoveryServers` | array of string | 1 to 64 `https://` URLs. |
+| `relays` | array of string | 0 to 64 entries, each `host:port` or an `https://` URL. |
+| `members` | array of object | 0 to 10000 entries `{ publicKey, name, revoked }`: `publicKey` is 64 hexadecimal characters, `name` is a string of at most 128 characters or `null`, `revoked` is a boolean. |
+| `privacyMode` | string | `normal`, `enhanced` or `maximum`. |
+| `issuedAt` | string | UTC time `YYYY-MM-DDTHH:MM:SS(.sss)Z`. |
+| `expiresAt` | string | UTC time in the same form. It MUST be later than `issuedAt` and at most 366 days after it. An administrator signs a validity of 1 to 365 days. |
+| `version` | integer | At least 1. |
+| `signature` | string | Hexadecimal Ed25519 signature by `admin` over the signed bytes (§13.2). |
+
+A profile file larger than 1 MiB MUST be rejected. While a profile is active its `privacyMode` takes precedence over the user's own setting.
+
+### 13.2 Signed Bytes
+
+The signed bytes are the UTF-8 encoding of the context string `palexplorer-private-network-v3` followed by one line feed (`0x0A`), followed by a JSON text with no whitespace and with exactly this key order: `name`, `admin`, `discoveryServers`, `relays`, `members` (each member as `publicKey`, `name`, `revoked`, with a missing name written as `null`), `privacyMode`, `issuedAt`, `version`, `expiresAt`. The signature is Ed25519 (RFC 8032) by the key in `admin` over these bytes. A change to any signed field, including `expiresAt`, invalidates the signature. Profiles signed with an earlier context string MUST be rejected.
+
+### 13.3 Handover
+
+A handover moves the administrator role to a new key. It is a JSON object `{ name, from, to, issuedAt, expiresAt, signature }`. The signed bytes are the UTF-8 encoding of `palexplorer-private-network-handover-v1`, one line feed, and a JSON text with no whitespace and the key order `name`, `from`, `to`, `issuedAt`, `expiresAt`. The signature is Ed25519 by `from`. The lifetime (`expiresAt` minus `issuedAt`) MUST NOT exceed 30 days. `from` MUST be the current administrator. `to` MUST be a member that is not revoked, and MUST differ from `from`. After a client has accepted one profile signed by `to`, it MUST retire `from` permanently and MUST reject every later profile that `from` signs.
+
+### 13.4 Accepting a Profile
+
+A client MUST accept a profile only when all of the following hold:
+1. The signature verifies and the field rules of §13.1 hold.
+2. `version` is greater than the highest version the client has seen from that administrator. This floor MUST survive leaving the network.
+3. `expiresAt` is in the future, with no clock-skew allowance.
+4. `issuedAt` is not more than 24 hours in the future.
+5. The administrator is the current administrator, or a valid unexpired handover from the current administrator names it, or the user confirmed the administrator key or its peer hash out of band. A file from a different administrator than the current one is refused unless the user explicitly chooses to switch networks.
+
+### 13.5 Behavior While a Profile Is Active
+
+While a profile is active a client:
+- MUST contact only the listed discovery servers and relays, over any protocol, and MUST refuse any other host;
+- MUST NOT use a public bootstrap list or a public DHT;
+- MUST refuse a session, inbound or outbound, with a key that is not a member that is not revoked;
+- MUST verify the stored profile again at least every 60 seconds, and a hand-edited stored profile MUST NOT widen access.
+
+A stored profile that fails verification, or that has passed its `expiresAt`, MUST put the client in lockdown: no discovery servers, no relays and no members, so that it refuses instead of falling back to the public network. A lockdown ends when the client imports a newer valid profile from the same administrator.
+
+### 13.6 Edge Cases
+
+- **Same version, different signature.** If a profile has the same `version` as the stored profile from the same administrator and a different signature, the client MUST reject it as a conflict. The administrator signs a new version. The same version with the same signature is not newer and is rejected as older.
+- **Future-dated `issuedAt`.** More than 24 hours in the future: reject.
+- **Large file.** Larger than 1 MiB: reject, for profiles and for handovers.
+- **The administrator's own expired profile.** On a device that holds the administrator key, an expired stored profile remains usable to sign a new profile and for nothing else.
+- **Revocation.** Revocation reaches a member only through a newer profile. The version floor prevents replaying a profile from before a revocation.
+
+### 13.7 Error Identifiers (informative)
+
+The reference implementation reports these, each prefixed `E_PRIVATE_NETWORK_`: `UNSIGNED`, `BAD_SIGNATURE`, `BAD_DATE`, `BAD_VALIDITY`, `EXPIRED`, `OLDER`, `CONFLICT`, `TOO_LARGE`, `OTHER_ADMIN`, `CONFIRM_ADMIN`, `ADMIN_MISMATCH`, `RETIRED_ADMIN`, `HANDOVER`, `NOT_MEMBER`, `EGRESS` and `INVALID`.
+
+### 13.8 Open Questions
+
+- Automatic distribution of profiles: today a member obtains a new profile by file.
+- Authentication of members to the discovery servers.
+- Confidentiality of the member list: the profile lists member keys in the clear to every holder of the file.
+
+## 14. Relay by Default, Direct by Mutual Consent
+
+This section is normative unless marked informative. It states which paths a peer may use to reach another peer, what an address may be used for, which identifiers appear on the wire, and how chat messages are delivered. The vector `test-vectors/v3/pal3-v0.6-transport-vectors.json` gives the mailbox location key of §14.6.
+
+### 14.1 Default Path and Transport
+
+- **Default path.** An implementation MUST reach a peer that is not another device of the same identity through a relay. It MUST NOT send any datagram to that peer's own address before mutual consent (§14.2) has been given in an authenticated session through the relay.
+- **Own devices.** Another device of the same identity MAY be reached directly.
+- **UDP only.** The core protocol runs over UDP only. The single permitted exception is a browser that is linked to the user's own device, which MAY use a transport that a browser can speak, with relay candidates only.
+- **No relay reachable.** If no relay is reachable, the attempt MUST fail with `E_PAL3_NO_RELAY`. The implementation MUST NOT fall back to a direct connection.
+
+### 14.2 Mutual Direct Consent
+
+Two operations inside an authenticated session let two identities agree to a direct connection. Request bodies and results are PAL-CBOR maps (A.3), and both operations follow the framing of §7.
+
+| Operation | Request | Response | Rules |
+|---|---|---|---|
+| `direct.consent` | `allow` (boolean) | `allow` (boolean) | The request states whether the caller allows a direct connection with this identity. The response states whether the callee allows it. A value that is not the boolean `true` MUST be treated as `false`. |
+| `direct.endpoint` | empty | `host` (text, 1 to 253 characters), `port` (integer 1 to 65535) | MUST be refused with `E_PAL3_DIRECT_NOT_ALLOWED` unless both sides sent `allow: true` in this session. A caller MUST NOT receive an endpoint for an identity that has not consented. |
+
+State rules:
+- Consent is per identity pair and the user can revoke it at any time.
+- Session flag `peerAllowsDirect` starts as `false` when a session starts, is set by each `direct.consent` request from the peer (`true` only for the boolean `true`), and is `false` again when the session closes. `direct.endpoint` is served only while the flag is `true` and the local side also allows a direct connection.
+- Consent withdrawn mid-session: a later `direct.consent` with `allow: false` sets the flag to `false`, and a later `direct.endpoint` MUST be refused. When the user revokes consent, an implementation MUST close the direct session with that identity and return to the relay.
+- Inbound direct sessions: an implementation MUST accept a direct session that does not arrive through a relay only from one of its own devices, or from an identity to which it returned a `direct.endpoint` response within the last 120 seconds. Other direct sessions MUST be closed after authentication with `E_PAL3_DIRECT_NOT_ALLOWED`.
+- One-sided consent: the session stays on the relay, and neither side learns the address of the other.
+
+### 14.3 Peer Exchange Without Addresses
+
+The response of `pex.exchange` (§8.4) is `{ peers: [{ peerPk }] }` with at most 32 entries, where `peerPk` is 64 hexadecimal characters. A response MUST contain public keys only. A receiver MUST ignore any address field (`host`, `port`) in an entry, whether the sender is an old peer or not, and MUST register the entry by `peerPk` alone. No operation of this protocol returns the address of a third party.
+
+### 14.4 Address Records
+
+An implementation MUST NOT publish its address in any DHT record, discovery registration or heartbeat unless the user explicitly enabled it. A local-network beacon MUST NOT contain a long-term public key, a handle or a name.
+
+### 14.5 Identifiers
+
+User, peer, share and file identifiers on the wire MUST be the full 32-byte SHA-256 value. A truncated form MAY be shown to a person and MUST NOT be used on the wire. SHA-1 and MD5 MUST NOT be used for identifiers. The single exception is the message integrity mechanism inside the TURN standard (RFC 8489, RFC 8656) that the relay extension uses.
+
+### 14.6 Message Delivery
+
+A chat message is delivered in one of two ways: in a session to the recipient, or through a mailbox.
+
+| Operation | Request | Response | Rules |
+|---|---|---|---|
+| `chat.deliver` | `payload` (map, the end-to-end encrypted message), `timestamp` (integer) | `ok` (boolean `true`) | Accepted only from a pal of the recipient. A sender that is not a pal receives `E_CHAT_NOT_A_PAL`. A message larger than the blob limit below receives `E_MESSAGE_TOO_LARGE`. |
+
+**Mailbox location key.** `locationKey = SHA-256(UTF-8("palexplorer-mailbox-v1\n" + recipientPublicKey + "\n" + dayIndex))`, where `recipientPublicKey` is 64 lowercase hexadecimal characters and `dayIndex` is `floor(unixSeconds / 86400)` written in decimal digits. The key is 32 bytes. It is distinct from the pair-derived mailbox location of §4 R3.
+
+Test vector: for `recipientPublicKey` = 32 bytes of `0xab` (`abab...ab`, 64 characters) and `unixSeconds` = 1794744000 (2026-11-15T12:00:00Z), `dayIndex` = 20772 and `locationKey` = `c9744d6927061d64a7a910442bc1e1a5a265580776deacf97ec8a040560168c8`.
+
+**Mailbox blob.** The blob is the UTF-8 JSON text of `{ "v": 1, "from": senderPublicKey, "timestamp": integer, "payload": object, "signature": hex }`. `payload` is already end-to-end encrypted. `signature` is the Ed25519 signature by `from` over the UTF-8 bytes of `palexplorer-mailbox-v1`, a line feed, and the JSON text (no whitespace) of the object holding the other four fields in the order `v`, `from`, `timestamp`, `payload`. A blob is at most 16 KiB. A recipient reads the locations of the current day and the previous 6 days, verifies the signature, ignores entries older than 7 days, and drops duplicates by `(from, timestamp, SHA-256(payload))`, so a message that arrives both in a session and through a mailbox is delivered once. A blob whose signature fails, for example after a change to `timestamp`, MUST be dropped.
+
+A sender uses a mailbox only when no session can be opened. While a private network profile is active, the public DHT MUST NOT be used, so delivery is by session only and the message stays queued.
+
+### 14.7 Edge Cases
+
+- **No relay reachable:** fail with `E_PAL3_NO_RELAY`; never fall back to direct.
+- **One-sided consent:** the session stays on the relay; the endpoint is not given.
+- **Consent withdrawn mid-session:** the flag becomes `false`, later `direct.endpoint` requests are refused and the direct session is closed.
+- **Old peers that still send addresses in peer exchange:** the addresses are ignored (§14.3).
+- **Clock skew across a day boundary:** the 7-day read window covers it.
+
+### 14.8 Error Identifiers (informative)
+
+`E_PAL3_DIRECT_NOT_ALLOWED`, `E_PAL3_NO_RELAY`, `E_CHAT_NOT_A_PAL`, `E_MESSAGE_TOO_LARGE`.
+
+### 14.9 Privacy Considerations (informative)
+
+- **The relay** learns the network addresses of both peers and the timing and size of the traffic. It sees no content and no long-term identity in clear.
+- **A pal that consented** learns the network address of the device it is connected to directly.
+- **Everyone else** learns nothing about the address: peer exchange, records, heartbeats and beacons carry no address and no long-term key by default.
+
+### 14.10 Open Questions
+
+- Relay operator trust: a single relay sees both addresses. Multi-hop relay cells (§15) remove this for control messages; a multi-hop path for the session itself is not specified.
+- Sealing of relay reservations: a reservation is not yet sealed to hide the reserving peer from the relay.
+
+---
+
+## 15. Multi-Hop Relay Cells (`onion/2`)
+
+This section is normative unless marked informative. It specifies the cell that carries a small payload through one, two or three relays so that no single relay knows both the sender and the destination. It is written from the reference implementation (`hn2/pal-core#337`). The vector `test-vectors/v3/pal3-v0.6-onion2-vectors.json` gives the sizes, a three-hop cell with every forwarded cell, and a fragmentation case.
+
+### 15.1 Scope and Capability
+
+- **Capability.** A peer that implements this section advertises the capability string `onion/2`. A sender MUST NOT send a cell through a relay, or to a destination, that does not advertise `onion/2`.
+- **What a cell carries.** A cell carries control messages. The payload MUST already be encrypted end to end for the destination; the last relay sees the payload bytes.
+- **Bulk data.** File data SHOULD NOT be sent in cells: three hops multiply the traffic roughly fourfold.
+- **Carriage.** How a cell travels between two hops is not part of this section. A hop treats a cell as one opaque byte string of the cell size.
+
+### 15.2 Constants
+
+| Name | Value | Meaning |
+|---|---|---|
+| `MAX_HOPS` | 3 | Largest number of relays on a path |
+| `CELL_SIZE` | 1024 bytes by default; 512 to 2048 allowed | Size of every cell on a path |
+| `SEAL` | 48 bytes | Sealed-box overhead: 32-byte ephemeral public key and 16-byte tag |
+| `NEXT` | 32 bytes | Ed25519 public key of the next hop |
+| `LEN` | 2 bytes | Payload length, unsigned, big-endian |
+| `LAYER_GROWTH` | `NEXT + SEAL` = 80 bytes | Bytes that each additional layer adds |
+
+- **Capacity.** `capacity = CELL_SIZE - 1 - SEAL - NEXT - LEN - (MAX_HOPS - 1) × LAYER_GROWTH = CELL_SIZE - 243`. It is 781 bytes for a 1024-byte cell, and it is the same for one, two and three hops.
+- **Layer length.** `layerLength(h) = SEAL + NEXT + LEN + capacity + (h - 1) × LAYER_GROWTH`, where `h` is the remaining-hops value. For a 1024-byte cell it is 863, 943 and 1023 bytes for `h` = 1, 2 and 3.
+- **Cell size.** Every cell on a path MUST have the same size, and a relay MUST forward a cell of the size it received. A sender SHOULD use 1024 bytes unless the network it belongs to sets another size. A cell whose size is outside 512 to 2048 bytes MUST be rejected.
+
+### 15.3 Cell Layout
+
+```
+cell          = remainingHops (1 byte) || layer (layerLength(remainingHops) bytes) || padding
+layer         = sealedBox(relayKey, nextHop (32 bytes) || inner)
+inner         = layer for the next relay            when remainingHops > 1
+              = payloadField                        when remainingHops = 1
+payloadField  = length (2 bytes, big-endian) || payload || fill      (LEN + capacity bytes)
+```
+
+- **`remainingHops`** is the number of relays that still have to open a layer, from 1 to `MAX_HOPS`. It is in the clear (§15.8).
+- **`nextHop`** is the Ed25519 public key of the next relay, or of the destination when `remainingHops` is 1.
+- **`fill`** and **`padding`** are fresh random bytes. `padding` fills the cell to the cell size; it is empty when `remainingHops` is 3.
+- **`payload`** is at most `capacity` bytes. A longer payload is fragmented (§15.6).
+
+### 15.4 Sealed Box
+
+`sealedBox(relayKey, m)` is the libsodium sealed box (`crypto_box_seal`):
+
+1. The relay's X25519 public key `R` is derived from its Ed25519 public key: `u = (1 + y) / (1 - y) mod 2^255 - 19`. The matching secret key is the first 32 bytes of SHA-512 of the Ed25519 seed, clamped.
+2. The sender generates a fresh X25519 key pair `(e, E)` for every layer of every cell.
+3. `nonce = BLAKE2b(E || R)` with a 24-byte digest and no key.
+4. `key = HSalsa20(X25519(e, R), 16 zero bytes)`.
+5. The output is `E (32 bytes) || tag (16 bytes) || ciphertext`, where tag and ciphertext are XSalsa20-Poly1305 of `m` under `key` and `nonce`.
+
+A sender MUST NOT reuse an ephemeral key. The box does not authenticate the sender: a cell is anonymous by design, and the payload carries its own authentication.
+
+### 15.5 Building and Relaying
+
+**Sender.** For relays `r1 … rn` (`r1` first, `1 ≤ n ≤ MAX_HOPS`) and destination `d`:
+
+1. Build `payloadField`.
+2. Set `inner = payloadField` and `next = d`. For `i = n` down to 1: `inner = sealedBox(ri, next || inner)`, then `next = ri`.
+3. Send `n || inner || padding` to `r1`.
+
+**Relay.** A relay that receives a cell MUST do the following in order, and MUST drop the cell without a reply when a step fails:
+
+1. Check that the cell size is allowed (`E_ONION_INVALID`) and that `remainingHops` is from 1 to `MAX_HOPS` (`E_ONION_TTL`).
+2. Compute the replay key: SHA-256 of the first `1 + layerLength(remainingHops)` bytes of the cell. The padding is not part of the key, because anyone on the link can change it. If the key is in the replay cache, drop the cell (`E_REPLAY`).
+3. Open the layer with its own key (`E_UNAUTHORIZED` when the box does not open). Add the replay key to the cache.
+4. If `remainingHops` is greater than 1: forward `(remainingHops - 1) || inner || fresh random padding` to `nextHop`.
+5. If `remainingHops` is 1: read `length`, reject a length above `capacity` (`E_ONION_INVALID`), and deliver `payload` to `nextHop`, the destination.
+
+- **Replay cache.** A relay MUST keep replay keys for at least as long as it would still forward the cell, and MUST bound the size of the cache.
+- **Jitter.** A relay SHOULD delay each forwarded cell by a random time; the reference implementation uses 0 to 20 milliseconds.
+- **Padding.** A relay MUST replace the padding with fresh random bytes. It MUST NOT copy the padding it received.
+
+### 15.6 Fragmentation
+
+A payload longer than `capacity` is split into fragments. Each fragment is the payload of one cell:
+
+```
+fragment = messageId (8 bytes) || index (2 bytes, big-endian) || count (2 bytes, big-endian) || data
+```
+
+- `messageId` is random and the same for all fragments of one payload. `index` counts from 0. `count` is the number of fragments, from 1 to 65535.
+- `data` is at most `capacity - 12` bytes: 769 bytes for a 1024-byte cell. Every fragment except the last carries exactly that many bytes.
+- The destination MUST reject a fragment set when `count` is 0, an `index` is not below `count`, the fragments disagree on `messageId` or `count`, or a fragment is missing (`E_ONION_INVALID`). It MUST bound the memory and the time it spends on incomplete payloads.
+- The sender SHOULD send the fragments of one payload over paths that are chosen independently.
+
+### 15.7 Error Identifiers (informative)
+
+`E_ONION_INVALID`, `E_ONION_TOO_LARGE`, `E_ONION_TTL`, `E_UNAUTHORIZED`, `E_REPLAY`. These are local results. A relay never returns an error to the previous hop.
+
+### 15.8 Privacy Considerations (informative)
+
+- **Size.** Every cell on a path has one size, so the size identifies neither the message nor the hop count.
+- **A relay** learns the previous hop and the next hop. The first relay learns the sender's network address; the last relay learns the destination's public key and the end-to-end encrypted payload.
+- **All relays together** learn the full path. The protection depends on relays that are run by independent operators.
+- **A link observer** sees `remainingHops` and therefore how far along its path a cell is. Header blinding in the style of Sphinx removes this; it is open work (`hn2/pal-core#339`).
+- **A global observer** can correlate cells that enter and leave relays by timing. Jitter helps only in part, and nothing is claimed against this adversary.
+
 ---
 
 ## Appendix A. Byte-Exact Wire Encodings
@@ -503,6 +945,19 @@ Fields are sorted by strictly ascending tag. Duplicate or out-of-order tags MUST
 | `0x000A` | `cert_sig_mldsa65` | 3309 B |
 
 A self-certified certificate is about 5.4 KB, and a delegated one is about 7.4 KB, including TLV headers.
+
+#### Revocation Statement (`revocation_statement`)
+| Tag | Field | Encoding |
+|---|---|---|
+| `0x0001` | `identity_ed25519_pk` | 32 B |
+| `0x0002` | `identity_mldsa65_pk` | 1952 B |
+| `0x0003` | `revocation_version` | u64be |
+| `0x0004` | `issued_at_ms` | u64be |
+| `0x0005` | `revoked_device_ids` | `16·N` bytes (concatenated `device_id`s, may be empty) |
+| `0x0009` | `sig_ed25519` | 64 B |
+| `0x000A` | `sig_mldsa65` | 3309 B |
+
+The signatures cover the TLV body of tags `0x0001`..`0x0005` under the domain label `pal3-revocation-v1` and the ML-DSA context `pal3-revocation-v1`.
 
 #### `HELLO` (`record.type = 0x01`)
 | Tag | Field | Encoding |
@@ -579,12 +1034,18 @@ Structured payloads (record bodies on `REQ`, `RES`, `ERROR`, `CANCEL`, `CREDIT`,
    type (u8 = 0x06) | conn_id (u32be) | pow_bits (u8) | cookie (16B) | reserved (6B = 0)
    ```
    - Puzzle: find `pow_nonce` such that `SHA-256("pal3-pow-v1" || cookie || conn_id (u32be) || pow_nonce (u32be))` has at least `pow_bits` leading zero bits. A client MUST refuse `pow_bits > 16` (`E_PAL3_POW_TOO_HARD`).
-3. **`PKT_PROTECTED` (`0x02`):** 9-byte header, ciphertext, 16-byte Poly1305 tag.
+3. **`PKT_PROTECTED` (`0x02`) and `PKT_PROTECTED_PHASE1` (`0x03`):** 9-byte header, ciphertext, 16-byte Poly1305 tag.
    ```
-   type (u8 = 0x02) | conn_id (u32be) | protected_pn (u32be) | ciphertext || tag (16B)
+   type (u8 = 0x02 or 0x03) | conn_id (u32be) | protected_pn (u32be) | ciphertext || tag (16B)
    ```
+   - Type `0x02` is sent under an even packet key epoch and `0x03` under an odd one (§3.2). `0x03` is valid only when `c2-key-update` is negotiated; otherwise it is dropped.
    - AEAD: ChaCha20-Poly1305 IETF. AAD is the unprotected header `type || conn_id || pn_low32`. Nonce = `iv[0..4] || (iv[4..8] XOR hi32(pn)) || (iv[8..12] XOR lo32(pn))`.
    - Header protection: `sample = ciphertext[0..16]`; `mask = ChaCha20-IETF(hp_key, counter = u32le(sample[0..4]), nonce = sample[4..16])` applied to 4 zero bytes; `protected_pn = pn_low32 XOR mask`. The full packet number is reconstructed as in RFC 9000 §A.3 with a 32-bit window.
+3a. **`PKT_PROTECTED_CID` (`0x04`) and `PKT_PROTECTED_CID_PHASE1` (`0x05`):** 13-byte header, ciphertext, 16-byte Poly1305 tag. Valid only when `c2-cid-v2` is negotiated.
+   ```
+   type (u8 = 0x04 or 0x05) | dcid (8B) | protected_pn (u32be) | ciphertext || tag (16B)
+   ```
+   - Type `0x04` is sent under an even packet key epoch and `0x05` under an odd one. The AAD is `type || dcid || pn_low32` (13 bytes). The nonce, the header protection (applied to the `protected_pn` bytes) and the packet number reconstruction are those of `0x02` (§3.2).
 4. **Frames inside `PKT_PROTECTED` plaintext.** An unknown frame type is fatal (`E_PAL3_C2_FRAME`). `channel` is 0..3.
 
    | Type | Frame | Layout after the type byte |
@@ -594,11 +1055,16 @@ Structured payloads (record bodies on `REQ`, `RES`, `ERROR`, `CANCEL`, `CREDIT`,
    | `0x03` | `STREAM` | `channel (u8) \| offset (u64be) \| len (u16be) \| data` |
    | `0x04` | `MAX_DATA` | `channel (u8) \| max_stream_data (u64be)` |
    | `0x05` | `PING` | none (ack-eliciting) |
-   | `0x06` | `CLOSE` | `code (u8) \| reason_len (u8) \| reason (utf8, ≤ 255 bytes)` |
+   | `0x06` | `CLOSE` | `code (u8) \| reason_len (u8) \| reason (utf8, ≤ 128 bytes)` |
    | `0x07` | `PATH_CHALLENGE` | `data (8B)` |
    | `0x08` | `PATH_RESPONSE` | `data (8B)` |
    | `0x09` | `STREAM_RESET` | `channel (u8) \| final_size (u64be)` |
    | `0x0A` | `STOP_SENDING` | `channel (u8)` |
+   | `0x0B` | `REPAIR` | `base_pn (u64be) \| count (u8, 1-8) \| reserved (u8, 0) \| parity_len (u16be) \| count × (pn_delta (u8) \| plaintext_len (u16be)) \| parity (parity_len bytes)` |
+| `0x0C` | `NEW_CONNECTION_ID` | `seq (u32be) \| cid (8B) \| reset_token (16B)` (ack-eliciting; capability `c2-cid-v2`) |
+| `0x0D` | `RETIRE_CONNECTION_ID` | `seq (u32be)` (ack-eliciting; capability `c2-cid-v2`) |
+
+   - `REPAIR` (capability `fec.v1`, A.6): after every 8 packets that carry `STREAM` frames, the sender sends one packet holding a `REPAIR` frame. `parity` is the byte-wise XOR of the 8 packets' plaintext frame bytes, each zero-extended to `parity_len`, and the `pn_delta` list names those packets (`base_pn + pn_delta`). A sender that uses `fec.v1` limits the plaintext of data packets so the `REPAIR` packet fits in the datagram. When exactly one named packet is missing and the other seven were received, the receiver XORs them out of `parity`, truncates to the stated length, processes the frames as if the packet had arrived and acknowledges its packet number. A `REPAIR` packet is not ack-eliciting and is never retransmitted. A receiver without `fec.v1` negotiated parses and ignores `REPAIR`. ECN is not part of this version: the reference platform exposes neither the ECN bits on send nor on receive, so no ECN behavior is specified or negotiated.
 
    - `ACK` ranges: the first range covers `largest − first_range_len .. largest`. Each further range starts `gap + 1` below the previous range's low end and covers `range_len + 1` packet numbers.
 
@@ -612,9 +1078,11 @@ Structured payloads (record bodies on `REQ`, `RES`, `ERROR`, `CANCEL`, `CREDIT`,
    - `CANCEL` (`0x15`): `{}`.
    - `CREDIT` (`0x16`): `{ credit }`.
    - `ERROR` (`0x17`): `{ error, code? }`. `error` is a message with sensitive values redacted.
-2. **Signed manifest** (§8.2): PAL-CBOR map `{ body, sigEd25519, sigMldsa65 }`. `body` is the encoded map `{ v: 1, shareId (16B), ownerEdPk, ownerDsaPk, revisionCounter (u64), authorDeviceId (16B), publishedAtMs (u64), encrypted, entries, extensions?, pad? }`, at most 16 MiB.
+2. **Signed manifest** (§8.2): PAL-CBOR map `{ body, sigEd25519, sigMldsa65 }`. `body` is the encoded map `{ v: 1, shareId (16B), ownerEdPk, ownerDsaPk, revisionCounter (u64), authorDeviceId (16B), publishedAtMs (u64), encrypted, entries, extensions?, redistribution?, pad? }`, at most 16 MiB. `redistribution` is `none`, `pals` or `link-holders` (§8.5); absent means `none`.
 3. **Signed capability grant** (§9): PAL-CBOR map `{ body, sigEd25519, sigMldsa65 }`. `body` is `{ v: 1, grantId, issuerEdPk, issuerDsaPk, subjectType, subjectId, resource, operations (sorted, unique), issuedAtMs, notBeforeMs, expiresAtMs, maxReads, maxBytes, bandwidthBps, devicesMax, requirePq: true, watermark }`. A zero limit means no limit. `subjectType` is one of `identity`, `device`, `group`, `link-capability`, `password`, `anonymous`.
-4. **Hybrid signature over a signed object:** `msg = ascii(context) || SHA-256(body)`. `sigEd25519 = Ed25519(msg)` and `sigMldsa65 = ML-DSA-65(msg, ctx = context)`. Both MUST verify (D3). Contexts: `pal3-manifest-v1`, `pal3-grant-v1`.
+4. **Hybrid signature over a signed object:** `msg = ascii(context) || SHA-256(body)`. `sigEd25519 = Ed25519(msg)` and `sigMldsa65 = ML-DSA-65(msg, ctx = context)`. Both MUST verify (D3). Contexts: `pal3-manifest-v1`, `pal3-grant-v1`, `pal3-share-ticket-v1`, `pal3-swarm-pass-v1`.
+5. **Swarm pass** (§8.5): PAL-CBOR map `{ body, sigEd25519, sigMldsa65 }`, context `pal3-swarm-pass-v1`. `body` is `{ v: 1, shareId (16B), holderEdPk (32B), holderDsaPk (1952B), issuedAtMs (u64), expiresAtMs (u64) }` with `expiresAtMs − issuedAtMs ≤ 600 000`.
+6. **Share-link ticket** (§8.6): context `pal3-share-ticket-v1`.
 
 ### A.6 Protocol Version and Suite Registry
 - **Wire protocol version:** `0x0003` (`PAL/3`).
@@ -624,7 +1092,9 @@ Structured payloads (record bodies on `REQ`, `RES`, `ERROR`, `CANCEL`, `CREDIT`,
   |---|---|
   | `0x0000` | Reserved. MUST NOT be assigned. |
   | `0x0001` | `X25519 + ML-KEM-768`, `Ed25519 + ML-DSA-65`, ChaCha20-Poly1305 IETF, BLAKE2b-256 |
+  | `0x0002`, `0x0003` | Not registered. The reference implementation carries optional CNSA (`0x0002`) and BSI AES-256-GCM (`0x0003`) suites that are implementation-private until their key-share carriage is specified here. |
 
   Every registered suite MUST pair a classical KEM with a post-quantum KEM (ML-KEM) and a classical signature with a post-quantum signature (ML-DSA or SLH-DSA), both verified strict-AND (D3). A classical-only suite MUST NOT be assigned an id. A suite with different key-share sizes MUST define how its key shares are carried before it is registered.
-- **Capability tokens:** sorted, unique, comma-separated UTF-8 tokens in HELLO `0x0008` and in the encrypted identity `0x0002`. The session uses the intersection. Core tokens: `core.v1`, `stream.v1`, `grants.v1`; `diag.v1` is the diagnostics extension (§11.0).
-- **This draft:** PAL/3 Draft 0.5.2, implemented by `@hn2/protocol` 5.0.0.
+- **Capability tokens:** sorted, unique, comma-separated UTF-8 tokens in HELLO `0x0008` and in the encrypted identity `0x0002`. The session uses the intersection. Core tokens: `core.v1`, `stream.v1`, `grants.v1`; `diag.v1` is the diagnostics extension (§11.0); `swarm.v1` is swarm offloading (§8.5); `pad.v1` is `CTRL` record padding (§6.1); `fec.v1` is XOR forward error correction on C2 (A.4). `c2-key-update` rotates the C2 packet keys with every record-layer rekey (§3.2, §5.3) and is advertised by default. `c2-cid-v2` issues and rotates 8-byte connection IDs on C2 (§3.2, A.4) and is advertised by default. Optional: `c2-bulk-plaintext-record` allows plaintext `DATA` records on `pal3/bulk/0..1` over direct paths; it takes effect only together with `c2-key-update` on carrier C2 (§6.2).
+- **Swarm error codes** (`ERROR.code`): `E_BUSY` (text form `E_BUSY: retry after <n> ms`), `E_SWARM_PROOF_REQUIRED`, `E_SWARM_PROOF_INVALID`, `E_SWARM_NOT_REDISTRIBUTABLE`, `E_SWARM_NOT_NEGOTIATED`.
+- **This draft:** PAL/3 Draft 0.6.10, implemented by `@hn2/protocol` 5.1.0. Conformance vectors: `test-vectors/v3/pal3-v0.5-vectors.json`, `test-vectors/v3/pal3-v0.6-swarm-vectors.json`, `test-vectors/v3/pal3-v0.6-core-operations.json`, `test-vectors/v3/pal3-v0.6-core-vectors.json`, `test-vectors/v3/pal3-v0.6-primitive-vectors.json`, `test-vectors/v3/pal3-v0.6-beacon-vectors.json`, `test-vectors/v3/pal3-v0.6-prekey-vectors.json`, `test-vectors/v3/pal3-v0.6-reset-vectors.json`, `test-vectors/v3/pal3-v0.6-transport-vectors.json`, `test-vectors/v3/pal3-v0.6-private-network-vectors.json`.

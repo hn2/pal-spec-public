@@ -1,6 +1,6 @@
 {
   "name": "pal-spec",
-  "version": "3.0.0-draft.5.2",
+  "version": "3.0.0-draft.6.11",
   "description": "PAL Protocol Specification — Normative Wire Specifications (PAL/3.0+) & Conformance Test Vectors",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
@@ -26,7 +26,7 @@
     "wire-protocol"
   ],
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.7.0"
   },
   "repository": {
     "type": "git",

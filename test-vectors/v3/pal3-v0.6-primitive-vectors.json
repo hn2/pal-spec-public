@@ -1,0 +1,297 @@
+{
+ "specVersion": "0.6.1",
+ "section": "5.4 5.5 8.1 8.2 primitives",
+ "blake2b256": [
+  {
+   "inputHex": "",
+   "outputHex": "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8"
+  },
+  {
+   "inputHex": "616263",
+   "outputHex": "bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319"
+  },
+  {
+   "inputHex": "54686520717569636b2062726f776e20666f78206a756d7073206f76657220746865206c617a7920646f67",
+   "outputHex": "01718cec35cd3d796dd00020e0bfecb473ad23457d063b75eff29c0ffa2e58a9"
+  },
+  {
+   "inputHex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f9050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf400070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef501080f161d242b323940474e555c636a71787f868d949ba2a9b0b7bec5ccd3dae1e8eff6020910171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8040b121920272e353c434a5158",
+   "outputHex": "2a1f9bdd06ae55566a3806a58734096c60fa91196180a27ce8c50d4581caa72a"
+  },
+  {
+   "inputHex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f9050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa060d141b222930373e454c535a61686f767d848b",
+   "outputHex": "6afdad1409d770bce274b62a69123c97c86ffb40ce9708f3ff9ae4cbba8ba080"
+  }
+ ],
+ "merkle": [
+  {
+   "length": 0,
+   "pattern": "byte i = (i * 7 + 3) mod 251",
+   "blockCount": 0,
+   "leavesHex": [],
+   "rootHex": "5c3cd7b696e23b2d800734e78972f333448955cdd73bedd7061bb3e8c6e4edd0",
+   "contentId": "pal3:b2t:5c3cd7b696e23b2d800734e78972f333448955cdd73bedd7061bb3e8c6e4edd0:0",
+   "proofs": []
+  },
+  {
+   "length": 1,
+   "pattern": "byte i = (i * 7 + 3) mod 251",
+   "blockCount": 1,
+   "leavesHex": [
+    "b27caea1d20c802cfa8cb76376f1412e31c80f6634b2c87994b5bb9e05a69ff9"
+   ],
+   "rootHex": "b27caea1d20c802cfa8cb76376f1412e31c80f6634b2c87994b5bb9e05a69ff9",
+   "contentId": "pal3:b2t:b27caea1d20c802cfa8cb76376f1412e31c80f6634b2c87994b5bb9e05a69ff9:1",
+   "proofs": [
+    {
+     "blockIndex": 0,
+     "siblingsHex": []
+    }
+   ]
+  },
+  {
+   "length": 262144,
+   "pattern": "byte i = (i * 7 + 3) mod 251",
+   "blockCount": 1,
+   "leavesHex": [
+    "6d0b0f06bca27100a4c6ee9b5ca1f211cc0c9bc27975d905b3b05b84ad0c19e9"
+   ],
+   "rootHex": "6d0b0f06bca27100a4c6ee9b5ca1f211cc0c9bc27975d905b3b05b84ad0c19e9",
+   "contentId": "pal3:b2t:6d0b0f06bca27100a4c6ee9b5ca1f211cc0c9bc27975d905b3b05b84ad0c19e9:262144",
+   "proofs": [
+    {
+     "blockIndex": 0,
+     "siblingsHex": []
+    }
+   ]
+  },
+  {
+   "length": 262145,
+   "pattern": "byte i = (i * 7 + 3) mod 251",
+   "blockCount": 2,
+   "leavesHex": [
+    "6d0b0f06bca27100a4c6ee9b5ca1f211cc0c9bc27975d905b3b05b84ad0c19e9",
+    "6b47282f8ee3ef253e424478aa59b0f246d2805669c45ac72ab739e161f191f2"
+   ],
+   "rootHex": "3ef4266b869f6ac41a471d5a212df14a02f42631a82f617358018a8b95de57ce",
+   "contentId": "pal3:b2t:3ef4266b869f6ac41a471d5a212df14a02f42631a82f617358018a8b95de57ce:262145",
+   "proofs": [
+    {
+     "blockIndex": 0,
+     "siblingsHex": [
+      "6b47282f8ee3ef253e424478aa59b0f246d2805669c45ac72ab739e161f191f2"
+     ]
+    },
+    {
+     "blockIndex": 1,
+     "siblingsHex": [
+      "6d0b0f06bca27100a4c6ee9b5ca1f211cc0c9bc27975d905b3b05b84ad0c19e9"
+     ]
+    }
+   ]
+  },
+  {
+   "length": 786432,
+   "pattern": "byte i = (i * 7 + 3) mod 251",
+   "blockCount": 3,
+   "leavesHex": [
+    "6d0b0f06bca27100a4c6ee9b5ca1f211cc0c9bc27975d905b3b05b84ad0c19e9",
+    "3d89be9efb76f99399a9d4ab4fe586cec5b3a59a9e1b80d0ae735765b20ff8d1",
+    "252afaea901879b9051e95e61acd347ba5b1041925678a0bf8a6599cf5702347"
+   ],
+   "rootHex": "ea5ff72e247bd2fd0d709d5b636913dbea45bed621880b25eb089e8506ae0cad",
+   "contentId": "pal3:b2t:ea5ff72e247bd2fd0d709d5b636913dbea45bed621880b25eb089e8506ae0cad:786432",
+   "proofs": [
+    {
+     "blockIndex": 0,
+     "siblingsHex": [
+      "3d89be9efb76f99399a9d4ab4fe586cec5b3a59a9e1b80d0ae735765b20ff8d1",
+      "252afaea901879b9051e95e61acd347ba5b1041925678a0bf8a6599cf5702347"
+     ]
+    },
+    {
+     "blockIndex": 2,
+     "siblingsHex": [
+      "91502ace997a9532ddff137b2a3158e9a075d0ca83dc75cad73464030fb79fd8"
+     ]
+    }
+   ]
+  },
+  {
+   "length": 1310730,
+   "pattern": "byte i = (i * 7 + 3) mod 251",
+   "blockCount": 6,
+   "leavesHex": [
+    "6d0b0f06bca27100a4c6ee9b5ca1f211cc0c9bc27975d905b3b05b84ad0c19e9",
+    "3d89be9efb76f99399a9d4ab4fe586cec5b3a59a9e1b80d0ae735765b20ff8d1",
+    "252afaea901879b9051e95e61acd347ba5b1041925678a0bf8a6599cf5702347",
+    "89fcc1c11f376b99fbffeb9e555dc5027cc5d4854c14752a3eea63c71b78e930",
+    "2883ee5a19cf9ea9b4101c4b438ab707b48f7759158a0ca6e63bafccfe233c4c",
+    "ecb9d6c34882138636d14cbd8f826f95e59bf59607416e2154dd00b7549526be"
+   ],
+   "rootHex": "1d5f2de5fd691a09eb8eda735f550ee1bf92bd9c60f41a9d9328b9ab88714ebb",
+   "contentId": "pal3:b2t:1d5f2de5fd691a09eb8eda735f550ee1bf92bd9c60f41a9d9328b9ab88714ebb:1310730",
+   "proofs": [
+    {
+     "blockIndex": 0,
+     "siblingsHex": [
+      "3d89be9efb76f99399a9d4ab4fe586cec5b3a59a9e1b80d0ae735765b20ff8d1",
+      "e04c55cbd72fab6e1bc66b90f950cef3c6ba6245ee9f724e5e09e754589a4b7a",
+      "0e795ad150638dc2a37c06703b4d872ce42b189671df6a14517775eb19b4144e"
+     ]
+    },
+    {
+     "blockIndex": 5,
+     "siblingsHex": [
+      "2883ee5a19cf9ea9b4101c4b438ab707b48f7759158a0ca6e63bafccfe233c4c",
+      "315f9116dda0efe61a0a326e0cd89df170f836bee8ea3fc5e11d17e5ef6b85db"
+     ]
+    }
+   ]
+  }
+ ],
+ "cookie": {
+  "secretHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+  "address": "203.0.113.7",
+  "port": 52474,
+  "connId": 3735928559,
+  "nowMs": 1762560000000,
+  "powBits": 8,
+  "expectedCookieHex": "5690189580eb2c0f8afd6510d814a808",
+  "pow": {
+   "bits": 8,
+   "nonce": 4,
+   "domain": "pal3-pow-v1"
+  }
+ },
+ "resumption": {
+  "prkHex": "1111111111111111111111111111111111111111111111111111111111111111",
+  "resumptionSecretHex": "42bf99d6fee8c3ec2c375943072744f64514b93fe2867c60fbe5d03bde95abc0",
+  "helloWithoutBinderHex": "030a11181f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8040b121920272e353c434a51585f666d747b828990979ea5acb3bac1c8cfd6dde4ebf2f9050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2c9d0d7dee5ecf3fa060d141b222930373e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf400070e151c232a31383f464d545b626970777e858c939aa1a8afb6bdc4cbd2d9e0e7eef501080f161d242b323940474e555c636a71787f868d",
+  "binderHex": "892180eaf6c00b6f8e4830db991b2f84b11d63bbbdff23aa9d70152b29c9dee9"
+ },
+ "manifestRevision": [
+  {
+   "name": "first seen share",
+   "prev": null,
+   "next": {
+    "counter": "1",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "expected": "accept"
+  },
+  {
+   "name": "higher counter",
+   "prev": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "6",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0202020202020202020202020202020202020202020202020202020202020202"
+   },
+   "expected": "accept"
+  },
+  {
+   "name": "lower counter is a rollback",
+   "prev": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "4",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0202020202020202020202020202020202020202020202020202020202020202"
+   },
+   "expected": "rollback"
+  },
+  {
+   "name": "same counter and hash is the same manifest",
+   "prev": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "expected": "accept"
+  },
+  {
+   "name": "same counter, same device, other hash is equivocation",
+   "prev": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0202020202020202020202020202020202020202020202020202020202020202"
+   },
+   "expected": "equivocation"
+  },
+  {
+   "name": "same counter, larger device id wins",
+   "prev": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "5",
+    "deviceIdHex": "02020202020202020202020202020202",
+    "hashHex": "0202020202020202020202020202020202020202020202020202020202020202"
+   },
+   "expected": "accept"
+  },
+  {
+   "name": "same counter, smaller device id loses",
+   "prev": {
+    "counter": "5",
+    "deviceIdHex": "02020202020202020202020202020202",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "5",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0202020202020202020202020202020202020202020202020202020202020202"
+   },
+   "expected": "rollback"
+  },
+  {
+   "name": "jump of exactly 2^32 is allowed",
+   "prev": {
+    "counter": "1",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "4294967297",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0202020202020202020202020202020202020202020202020202020202020202"
+   },
+   "expected": "accept"
+  },
+  {
+   "name": "jump above 2^32 is rejected",
+   "prev": {
+    "counter": "1",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0101010101010101010101010101010101010101010101010101010101010101"
+   },
+   "next": {
+    "counter": "4294967298",
+    "deviceIdHex": "01010101010101010101010101010101",
+    "hashHex": "0202020202020202020202020202020202020202020202020202020202020202"
+   },
+   "expected": "jump"
+  }
+ ]
+}
