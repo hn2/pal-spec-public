@@ -1,0 +1,729 @@
+{
+  "specVersion": "0.6.20",
+  "section": "6.2",
+  "description": "Plaintext bulk records: FLAG_PLAINTEXT (0x80) DATA records on pal3/bulk/0..1, their wire form, the record-layer rejections, and the session gate (capabilities, carrier, path kind, 3 s drain window).",
+  "generatedBy": "bin/generate-v0.6-plaintext-record-vectors.mjs",
+  "flagPlaintext": 128,
+  "recordTypeData": 19,
+  "bulkChannelIds": [
+    2,
+    3
+  ],
+  "directPathKinds": [
+    "lan",
+    "direct_udp",
+    "stun_punch"
+  ],
+  "records": [
+    {
+      "name": "plaintextDataOnBulk0",
+      "description": "A DATA record of 100 bytes on pal3/bulk/0 with FLAG_PLAINTEXT: wire length 120, no tag",
+      "channelId": 2,
+      "keyHex": "368f13b90715f81446a2a6a45849c7c3b6bab131b5e4f1f28d9df934e76948f8",
+      "saltHex": "a51f2122",
+      "wireHex": "138000000000000400000000000000000000006405121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a1724313e4b5865727f8c99a6b3c0cddae7f40613202d3a4754616e7b8895a2afbcc9d6e3f0020f1c293643505d6a7784919eabb8c5d2dfecf90b1825",
+      "flags": 128,
+      "plaintext": true,
+      "payloadHex": "05121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a1724313e4b5865727f8c99a6b3c0cddae7f40613202d3a4754616e7b8895a2afbcc9d6e3f0020f1c293643505d6a7784919eabb8c5d2dfecf90b1825",
+      "wireLength": 120
+    },
+    {
+      "name": "plaintextDataOnBulk1",
+      "description": "The same on pal3/bulk/1",
+      "channelId": 3,
+      "keyHex": "04096d035fd2ef827edbcff949320c646d6b4fbecb34d536446ee8075d6d0e41",
+      "saltHex": "18a90e2c",
+      "wireHex": "138000000000000600000000000000000000006405121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a1724313e4b5865727f8c99a6b3c0cddae7f40613202d3a4754616e7b8895a2afbcc9d6e3f0020f1c293643505d6a7784919eabb8c5d2dfecf90b1825",
+      "flags": 128,
+      "plaintext": true,
+      "payloadHex": "05121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a1724313e4b5865727f8c99a6b3c0cddae7f40613202d3a4754616e7b8895a2afbcc9d6e3f0020f1c293643505d6a7784919eabb8c5d2dfecf90b1825",
+      "wireLength": 120
+    },
+    {
+      "name": "plaintextEmptyPayload",
+      "description": "An empty plaintext DATA record is 20 bytes",
+      "channelId": 2,
+      "keyHex": "368f13b90715f81446a2a6a45849c7c3b6bab131b5e4f1f28d9df934e76948f8",
+      "saltHex": "a51f2122",
+      "wireHex": "1380000000000008000000000000000000000000",
+      "flags": 128,
+      "plaintext": true,
+      "payloadHex": "",
+      "wireLength": 20
+    },
+    {
+      "name": "sealedDataOnBulk0",
+      "description": "The same 100 bytes sealed: wire length 136 with the 16-byte tag, flag 0x00",
+      "channelId": 2,
+      "keyHex": "368f13b90715f81446a2a6a45849c7c3b6bab131b5e4f1f28d9df934e76948f8",
+      "saltHex": "a51f2122",
+      "wireHex": "1300000000000004000000000000000000000064c28d84675bd7bd8f2c188ada16e0c96b06909cd66cf7ea50601059266ac3c9e139127eec82ae2b03df65c4a7b72fd5d20410bca5aaf6c4addf2251a6807bc9efeaf0d234b80faed28a83f71cb1e0db5b9e48f6241eedb872649fcd88fcc8651d7ebf37b159b1f4bd09a6a6597e04109e10525748",
+      "flags": 0,
+      "plaintext": false,
+      "payloadHex": "05121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a1724313e4b5865727f8c99a6b3c0cddae7f40613202d3a4754616e7b8895a2afbcc9d6e3f0020f1c293643505d6a7784919eabb8c5d2dfecf90b1825",
+      "wireLength": 136
+    }
+  ],
+  "rejected": [
+    {
+      "name": "plaintextFlagOnAPing",
+      "description": "FLAG_PLAINTEXT on a non-DATA record",
+      "channelId": 2,
+      "receiverAllowsPlaintext": true,
+      "wireHex": "188000000000000400000000000000000000002805121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a",
+      "expectedError": "E_PAL3_PLAINTEXT_FORBIDDEN"
+    },
+    {
+      "name": "plaintextFlagOnTheControlChannel",
+      "description": "FLAG_PLAINTEXT on pal3/ctl, which never allows it",
+      "channelId": 0,
+      "receiverAllowsPlaintext": false,
+      "wireHex": "138000000000000400000000000000000000002805121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a",
+      "expectedError": "E_PAL3_PLAINTEXT_FORBIDDEN"
+    },
+    {
+      "name": "plaintextFlagOnTheMediaChannel",
+      "description": "FLAG_PLAINTEXT on pal3/media",
+      "channelId": 1,
+      "receiverAllowsPlaintext": false,
+      "wireHex": "138000000000000400000000000000000000002805121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a",
+      "expectedError": "E_PAL3_PLAINTEXT_FORBIDDEN"
+    },
+    {
+      "name": "plaintextFlagWithoutTheNegotiatedCapability",
+      "description": "FLAG_PLAINTEXT DATA on pal3/bulk/0 although the capability was not negotiated",
+      "channelId": 2,
+      "receiverAllowsPlaintext": false,
+      "wireHex": "138000000000000400000000000000000000002805121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a",
+      "expectedError": "E_PAL3_PLAINTEXT_FORBIDDEN"
+    },
+    {
+      "name": "plaintextRecordWithATagAppended",
+      "description": "A plaintext record whose wire length is 20 + payload_length + 16",
+      "channelId": 2,
+      "receiverAllowsPlaintext": true,
+      "wireHex": "138000000000000400000000000000000000002805121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a00000000000000000000000000000000",
+      "expectedError": "E_PAL3_LENGTH_MISMATCH"
+    },
+    {
+      "name": "plaintextRecordShorterThanItsLength",
+      "description": "A plaintext record that is shorter than 20 + payload_length",
+      "channelId": 2,
+      "receiverAllowsPlaintext": true,
+      "wireHex": "138000000000000400000000000000000000002805121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf8",
+      "expectedError": "E_PAL3_LENGTH_MISMATCH"
+    },
+    {
+      "name": "plaintextRecordOutOfSequence",
+      "description": "The channel_seq rules of 6.1 apply unchanged: sequence 5 when 0 is expected",
+      "channelId": 2,
+      "receiverAllowsPlaintext": true,
+      "wireHex": "138000000000000400000000000000050000002805121f2c394653606d7a8794a1aebbc8d5e2ef010e1b2835424f5c697683909daab7c4d1deebf80a",
+      "expectedError": "E_PAL3_SEQ_MISMATCH"
+    }
+  ],
+  "sendSideRejected": [
+    {
+      "name": "sendPlaintextWithoutAllow",
+      "description": "A sender that has not enabled plaintext records",
+      "channelId": 2,
+      "enabled": false,
+      "recordType": 19,
+      "expectedError": "E_PAL3_PLAINTEXT_FORBIDDEN"
+    },
+    {
+      "name": "sendPlaintextOnControlChannel",
+      "description": "A sender asks for plaintext on pal3/ctl",
+      "channelId": 0,
+      "enabled": true,
+      "recordType": 19,
+      "expectedError": "E_PAL3_PLAINTEXT_FORBIDDEN"
+    },
+    {
+      "name": "sendPlaintextNonData",
+      "description": "A sender asks for a plaintext PING",
+      "channelId": 2,
+      "enabled": true,
+      "recordType": 24,
+      "expectedError": "E_PAL3_PLAINTEXT_FORBIDDEN"
+    }
+  ],
+  "gate": [
+    {
+      "name": "directC2BothCapabilities",
+      "description": "Both capabilities, carrier C2, direct UDP path",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "direct_udp",
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        }
+      ]
+    },
+    {
+      "name": "lanPath",
+      "description": "The local network path is direct",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "lan",
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        }
+      ]
+    },
+    {
+      "name": "stunPunchPath",
+      "description": "A hole-punched path is direct",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "stun_punch",
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        }
+      ]
+    },
+    {
+      "name": "withoutKeyUpdate",
+      "description": "c2-bulk-plaintext-record without c2-key-update: always sealed",
+      "capabilities": [
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "direct_udp",
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        }
+      ]
+    },
+    {
+      "name": "withoutBulkCapability",
+      "description": "Only c2-key-update: always sealed",
+      "capabilities": [
+        "c2-key-update"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "direct_udp",
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        }
+      ]
+    },
+    {
+      "name": "carrierC1",
+      "description": "Carrier C1 never carries plaintext records",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c1",
+      "initialPathKind": "direct_udp",
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        }
+      ]
+    },
+    {
+      "name": "unknownPath",
+      "description": "No path kind asserted: sealed",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": null,
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        }
+      ]
+    },
+    {
+      "name": "relayPath",
+      "description": "A relayed path never carries plaintext records",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "buddy_relay",
+      "pathChanges": [],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        }
+      ]
+    },
+    {
+      "name": "directThenRelay",
+      "description": "The path leaves direct at t=1000 ms: the sender stops at once, the receiver drains until t=4000 ms",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "direct_udp",
+      "pathChanges": [
+        {
+          "atMs": 1000,
+          "setPath": "buddy_relay"
+        }
+      ],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 1000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        }
+      ]
+    },
+    {
+      "name": "relayThenDirect",
+      "description": "A relayed session upgrades to a direct path at t=500 ms",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "buddy_relay",
+      "pathChanges": [
+        {
+          "atMs": 500,
+          "setPath": "direct_udp"
+        }
+      ],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": false
+        },
+        {
+          "atMs": 500,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        }
+      ]
+    },
+    {
+      "name": "directThenTurnThenDirect",
+      "description": "Direct, then TURN at t=100, then direct again at t=2000: the drain window is cancelled",
+      "capabilities": [
+        "c2-key-update",
+        "c2-bulk-plaintext-record"
+      ],
+      "carrier": "c2",
+      "initialPathKind": "direct_udp",
+      "pathChanges": [
+        {
+          "atMs": 100,
+          "setPath": "turn_relay"
+        },
+        {
+          "atMs": 2000,
+          "setPath": "direct_udp"
+        }
+      ],
+      "drainWindowMs": 3000,
+      "samples": [
+        {
+          "atMs": 0,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 100,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 1500,
+          "senderMayUsePlaintext": false,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 2000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 2999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 3999,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 4001,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        },
+        {
+          "atMs": 6000,
+          "senderMayUsePlaintext": true,
+          "receiverAcceptsPlaintext": true
+        }
+      ]
+    }
+  ]
+}

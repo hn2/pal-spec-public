@@ -1,5 +1,5 @@
 // Generates pal3-v0.6-onion2-vectors.json: onion/2 cells of section 15.
-// Standalone, Node built-ins and the repository's BLAKE2b only. Run: node test-vectors/v3/pal3-v0.6-onion2-generate.mjs
+// Standalone, Node built-ins only. Run: node test-vectors/v3/pal3-v0.6-onion2-generate.mjs
 // Ephemeral keys, payload fill and cell padding are random in real use; here they are derived from fixed labels so the file is reproducible.
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
@@ -12,10 +12,10 @@ const LAYER_GROWTH = NEXT + SEAL_BYTES;
 const cellCapacity = (cellSize) => cellSize - 1 - SEAL_BYTES - NEXT - LEN - (MAX_HOPS - 1) * LAYER_GROWTH;
 const layerLength = (remainingHops, cellSize) => SEAL_BYTES + NEXT + LEN + cellCapacity(cellSize) + (remainingHops - 1) * LAYER_GROWTH;
 
-const sha256 = (b) => createHash('sha256').update(b).digest();
+const sha384 = (b) => createHash('sha384').update(b).digest();
 function labelBytes(label, length) {
   const parts = [];
-  for (let i = 0; parts.length * 32 < length; i++) parts.push(sha256(Buffer.from(`pal3-onion2-vector ${label} ${i}`, 'utf8')));
+  for (let i = 0; parts.length * 48 < length; i++) parts.push(sha384(Buffer.from(`pal3-onion2-vector ${label} ${i}`, 'utf8')));
   return Buffer.concat(parts).subarray(0, length);
 }
 const pad = (head, cellSize, label) => Buffer.concat([head, labelBytes(label, cellSize - head.length)]);
@@ -47,7 +47,7 @@ const hops = relayPks.map((pk, i) => {
     remainingHops,
     layerLength: layerLength(remainingHops, cellSize),
     cellHex: pad(Buffer.concat([Buffer.from([remainingHops]), layers[i]]), cellSize, `padding ${i + 1}`).toString('hex'),
-    replayKeyHex: sha256(Buffer.concat([Buffer.from([remainingHops]), layers[i]])).toString('hex'),
+    replayKeyHex: sha384(Buffer.concat([Buffer.from([remainingHops]), layers[i]])).toString('hex'),
     nextPublicKeyHex: (i + 1 < relayPks.length ? relayPks[i + 1] : destinationPk).toString('hex'),
     forwardedPrefixHex: i + 1 < relayPks.length ? Buffer.concat([Buffer.from([remainingHops - 1]), layers[i + 1]]).toString('hex') : null,
   };
@@ -88,11 +88,11 @@ const out = {
     messageIdHex: messageId.toString('hex'),
     payloadLength: longPayload.length,
     payloadRule: 'byte i is i modulo 256',
-    payloadSha256Hex: sha256(longPayload).toString('hex'),
+    payloadHashHex: sha384(longPayload).toString('hex'),
     fragmentCount: count,
     fragmentHeadersHex: fragments.map((f) => f.subarray(0, FRAG_HEADER).toString('hex')),
     fragmentLengths: fragments.map((f) => f.length),
-    fragmentSha256Hex: fragments.map((f) => sha256(f).toString('hex')),
+    fragmentHashHex: fragments.map((f) => sha384(f).toString('hex')),
   },
 };
 

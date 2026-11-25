@@ -1,0 +1,820 @@
+{
+  "specVersion": "0.6.22",
+  "section": "12.3, 12.4",
+  "description": "Local policy: the extension source linter decisions (12.3, a linter and not a security boundary) and the local swarm limits (12.4), whose refusals are always E_BUSY with the text \"E_BUSY: retry after <n> ms\" and never carry a reason.",
+  "generatedBy": "bin/generate-v0.6-local-policy-vectors.mjs",
+  "analyzer": [
+    {
+      "name": "plainFunction",
+      "source": "export function add(a, b) { return a + b; }",
+      "safe": true,
+      "isSecurityBoundary": false,
+      "criticalTypes": []
+    },
+    {
+      "name": "importOfAnAllowedModule",
+      "source": "import { createHash } from 'node:crypto';\nexport const h = (b) => createHash('sha384').update(b).digest();",
+      "safe": true,
+      "isSecurityBoundary": false,
+      "criticalTypes": []
+    },
+    {
+      "name": "directEval",
+      "source": "export const run = (s) => eval(s);",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "dynamic-code-exec"
+      ]
+    },
+    {
+      "name": "indirectEval",
+      "source": "export const run = (s) => (0, eval)(s);",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "dynamic-code-exec"
+      ]
+    },
+    {
+      "name": "functionConstructor",
+      "source": "export const f = new Function('return 1');",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "dynamic-code-exec"
+      ]
+    },
+    {
+      "name": "constructorChain",
+      "source": "export const f = (() => {}).constructor.constructor('return 1');",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "dynamic-code-exec"
+      ]
+    },
+    {
+      "name": "staticImportOfChildProcess",
+      "source": "import { exec } from 'node:child_process';\nexport const x = exec;",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "blocked-import"
+      ]
+    },
+    {
+      "name": "requireOfVm",
+      "source": "const vm = require('vm');\nexport const r = vm;",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "blocked-import"
+      ]
+    },
+    {
+      "name": "importOfWorkerThreads",
+      "source": "import { Worker } from 'worker_threads';\nexport const W = Worker;",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "blocked-import"
+      ]
+    },
+    {
+      "name": "computedImport",
+      "source": "const name = 'child' + '_process';\nexport const m = import(name);",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "dynamic-import"
+      ]
+    },
+    {
+      "name": "computedRequire",
+      "source": "const name = 'fs';\nconst m = require(name);",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "dynamic-import"
+      ]
+    },
+    {
+      "name": "aliasedRequire",
+      "source": "const r = require;\nexport const x = r('node:vm');",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "blocked-module-reference",
+        "module-loader-access"
+      ]
+    },
+    {
+      "name": "moduleLoaderInternals",
+      "source": "import { createRequire } from 'node:module';\nexport const r = createRequire(import.meta.url);",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "blocked-import",
+        "module-loader-access"
+      ]
+    },
+    {
+      "name": "processBinding",
+      "source": "export const b = process.binding('fs');",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "native-binding-access"
+      ]
+    },
+    {
+      "name": "computedProcessAccess",
+      "source": "export const p = process['dlopen'];",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "native-binding-access"
+      ]
+    },
+    {
+      "name": "computedGlobalAccess",
+      "source": "export const g = globalThis['process'];",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "global-computed-access"
+      ]
+    },
+    {
+      "name": "webAssembly",
+      "source": "export const w = WebAssembly;",
+      "safe": false,
+      "isSecurityBoundary": false,
+      "criticalTypes": [
+        "webassembly"
+      ]
+    }
+  ],
+  "analyzerBundled": {
+    "source": "import { exec } from 'node:child_process';\nexport const x = exec;",
+    "manifest": {
+      "bundled": true,
+      "permissions": [
+        "exec:git"
+      ]
+    },
+    "safe": true
+  },
+  "permissions": [
+    {
+      "name": "exact",
+      "granted": [
+        "fs:read"
+      ],
+      "required": "fs:read",
+      "allowed": true
+    },
+    {
+      "name": "wildcardCoversOrdinary",
+      "granted": [
+        "*"
+      ],
+      "required": "fs:read",
+      "allowed": true
+    },
+    {
+      "name": "wildcardNeverImpliesExec",
+      "granted": [
+        "*"
+      ],
+      "required": "exec:git",
+      "allowed": false
+    },
+    {
+      "name": "wildcardNeverImpliesNative",
+      "granted": [
+        "*"
+      ],
+      "required": "native:sodium",
+      "allowed": false
+    },
+    {
+      "name": "namedExecIsGranted",
+      "granted": [
+        "exec:git"
+      ],
+      "required": "exec:git",
+      "allowed": true
+    },
+    {
+      "name": "notGranted",
+      "granted": [
+        "fs:read"
+      ],
+      "required": "fs:write",
+      "allowed": false
+    }
+  ],
+  "limits": {
+    "pieceBytes": 262144,
+    "shareA": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "shareB": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "peer1": "1111111111111111111111111111111111111111111111111111111111111111",
+    "peer2": "2222222222222222222222222222222222222222222222222222222222222222",
+    "busyMinMs": 100,
+    "busyMaxMs": 60000
+  },
+  "scenarios": [
+    {
+      "name": "defaultsServe",
+      "description": "With the defaults a piece is served",
+      "startMs": 1795521600000,
+      "settings": {},
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "privacyModeServesNothing",
+      "description": "Privacy mode refuses everything with E_BUSY and does not announce",
+      "startMs": 1795521600000,
+      "settings": {
+        "privacy": true
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        }
+      ]
+    },
+    {
+      "name": "doNotShareRefusesOnlyThatShare",
+      "description": "A per-share \"do not share\" refuses that share only",
+      "startMs": 1795521600000,
+      "settings": {
+        "doNotShare": [
+          "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ]
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "uploadSlotsAreConcurrentLimits",
+      "description": "One slot: the second concurrent upload is refused until the first is released",
+      "startMs": 1795521600000,
+      "settings": {
+        "uploadSlots": 1
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "2222222222222222222222222222222222222222222222222222222222222222",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "expected": {
+            "serving": true,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 1000 ms",
+            "retryAfterMs": 1000
+          }
+        },
+        {
+          "atMs": 2,
+          "op": "release",
+          "lease": 0,
+          "sentBytes": 262144,
+          "expected": {
+            "released": true
+          }
+        },
+        {
+          "atMs": 3,
+          "op": "acquire",
+          "peer": "2222222222222222222222222222222222222222222222222222222222222222",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "zeroSlotsMeansOff",
+      "description": "uploadSlots 0 serves nothing",
+      "startMs": 1795521600000,
+      "settings": {
+        "uploadSlots": 0
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        }
+      ]
+    },
+    {
+      "name": "perPeerRateAllowsABurstThenRefuses",
+      "description": "Per-peer rate of P/4 per second: a burst of 4 pieces, then a refusal; another peer is not affected",
+      "startMs": 1795521600000,
+      "settings": {
+        "perPeerBps": 65536
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 2,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 3,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 4,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "expected": {
+            "serving": true,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 3997 ms",
+            "retryAfterMs": 3997
+          }
+        },
+        {
+          "atMs": 5,
+          "op": "acquire",
+          "peer": "2222222222222222222222222222222222222222222222222222222222222222",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "overallRateAllowsABurstThenRefuses",
+      "description": "Overall rate of 2 pieces per second: a burst of 8 pieces (4 s), then a refusal, and one piece again after 1 s",
+      "startMs": 1795521600000,
+      "settings": {
+        "uploadBps": 524288
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "0000000000000000000000000000000000000000000000000000000000000000",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 2,
+          "op": "acquire",
+          "peer": "2222222222222222222222222222222222222222222222222222222222222222",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 3,
+          "op": "acquire",
+          "peer": "3333333333333333333333333333333333333333333333333333333333333333",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 4,
+          "op": "acquire",
+          "peer": "4444444444444444444444444444444444444444444444444444444444444444",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 5,
+          "op": "acquire",
+          "peer": "5555555555555555555555555555555555555555555555555555555555555555",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 6,
+          "op": "acquire",
+          "peer": "6666666666666666666666666666666666666666666666666666666666666666",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 7,
+          "op": "acquire",
+          "peer": "7777777777777777777777777777777777777777777777777777777777777777",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 9,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "expected": {
+            "serving": true,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 492 ms",
+            "retryAfterMs": 492
+          }
+        },
+        {
+          "atMs": 1100,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "meteredNetworkIsOffByDefault",
+      "description": "On a metered network nothing is served unless allowed",
+      "startMs": 1795521600000,
+      "settings": {},
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "device": {
+            "metered": true
+          },
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "device": {
+            "metered": false
+          },
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "meteredDailyCapResetsAtTheNextUtcDay",
+      "description": "A daily cap of 1000 bytes stops serving on a metered network and resets at the next UTC day",
+      "startMs": 1795521600000,
+      "settings": {
+        "meteredServe": true,
+        "meteredDailyBytes": 1000
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 800,
+          "release": 800,
+          "device": {
+            "metered": true
+          },
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 300,
+          "release": 300,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        },
+        {
+          "atMs": 2,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 1,
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        },
+        {
+          "atMs": 86400000,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 500,
+          "release": 500,
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "lowBatteryPausesUnlessCharging",
+      "description": "Below 20 percent battery nothing is served unless the device is charging",
+      "startMs": 1795521600000,
+      "settings": {},
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "device": {
+            "batteryPct": 10,
+            "charging": false
+          },
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "device": {
+            "batteryPct": 10,
+            "charging": true
+          },
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "onlyWhileChargingPauses",
+      "description": "onlyWhileCharging refuses while on battery",
+      "startMs": 1795521600000,
+      "settings": {
+        "onlyWhileCharging": true
+      },
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "device": {
+            "charging": false
+          },
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        },
+        {
+          "atMs": 1,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "release": 262144,
+          "device": {
+            "charging": true
+          },
+          "expected": {
+            "serving": true,
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "offlineDeviceServesNothing",
+      "description": "An offline device refuses",
+      "startMs": 1795521600000,
+      "settings": {},
+      "steps": [
+        {
+          "atMs": 0,
+          "op": "acquire",
+          "peer": "1111111111111111111111111111111111111111111111111111111111111111",
+          "shareId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 262144,
+          "device": {
+            "online": false
+          },
+          "expected": {
+            "serving": false,
+            "ok": false,
+            "error": "E_BUSY",
+            "text": "E_BUSY: retry after 60000 ms",
+            "retryAfterMs": 60000
+          }
+        }
+      ]
+    }
+  ]
+}

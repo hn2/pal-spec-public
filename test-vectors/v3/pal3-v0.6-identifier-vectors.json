@@ -1,0 +1,34 @@
+{
+  "specVersion": "0.6.18",
+  "section": "14.5",
+  "hash": "SHA-384, 48 bytes, 96 lowercase hexadecimal characters",
+  "peer": {
+    "domain": "pal3-id-peer-v1",
+    "ed25519PkHex": "010e1b2835424f5c697683909daab7c4d1deebf805121f2c394653606d7a8794",
+    "mldsa65PkFill": "byte i = (i * 13 + 2) mod 256, 1952 bytes",
+    "idHex": "a73a0758269863737e0b24c17a6c187ea488494bf50751183a3d88dee1b72699dfa512b87719bf9ac3d58d6ed017a4de"
+  },
+  "file": {
+    "contentPattern": "byte i = (i * 7 + 3) mod 251, 1000 bytes",
+    "idHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044"
+  },
+  "share": {
+    "merkleLength": 786432,
+    "manifestRootHex": "0736ada1b4d09934a0916b6b61de25f7537af6f14ee57641678831c9889972a4620396afa6607c99dea492e54808626a",
+    "idHex": "0736ada1b4d09934a0916b6b61de25f7537af6f14ee57641678831c9889972a4620396afa6607c99dea492e54808626a"
+  },
+  "group": {
+    "domain": "pal3-id-group-v1",
+    "creatorPeerIdHex": "a73a0758269863737e0b24c17a6c187ea488494bf50751183a3d88dee1b72699dfa512b87719bf9ac3d58d6ed017a4de",
+    "nonceHex": "03101d2a3744515e6b7885929facb9c6d3e0edfa0714212e3b4855626f7c8996",
+    "createdAtMs": 1762560000000,
+    "idHex": "b03521e301832afb225d3d4671bfa18df13aea3f976adf1854417ab0b003ca2e1b7c0da5011cbeeb180af38b0ffd0715"
+  },
+  "network": {
+    "domain": "pal3-id-network-v1",
+    "adminEd25519PkHex": "010e1b2835424f5c697683909daab7c4d1deebf805121f2c394653606d7a8794",
+    "nonceHex": "03101d2a3744515e6b7885929facb9c6d3e0edfa0714212e3b4855626f7c8996",
+    "createdAtMs": 1762560000000,
+    "idHex": "20183bcdb0166ac793939f3f516db8a3632dd2d6b8654bdade6e93a2140984cdbfc07dbb38f983413fb5a9d55c437b8e"
+  }
+}

@@ -25,7 +25,7 @@ test('private network profile signed bytes use the v3 context and the fixed key 
   const [context, json] = signedBytesUtf8.split('\n');
   assert.equal(context, 'palexplorer-private-network-v3');
   const parsed = JSON.parse(json);
-  assert.deepEqual(Object.keys(parsed), ['name', 'admin', 'discoveryServers', 'relays', 'members', 'privacyMode', 'issuedAt', 'version', 'expiresAt']);
+  assert.deepEqual(Object.keys(parsed), ['name', 'admin', 'discoveryServers', 'relays', 'members', 'privacyMode', 'issuedAt', 'version', 'expiresAt', 'networkId', 'networkCreator', 'networkNonce', 'networkCreatedAtMs']);
   assert.deepEqual(Object.keys(parsed.members[0]), ['publicKey', 'name', 'revoked']);
   assert.equal(parsed.members[1].name, null);
 });

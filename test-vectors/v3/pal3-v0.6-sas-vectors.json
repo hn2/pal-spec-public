@@ -1,0 +1,241 @@
+{
+  "specVersion": "0.6.20",
+  "section": "10 item 5, Quick Drop SAS (commit-then-reveal); 5.2, Handshake SAS",
+  "description": "SAS = HKDF-SHA-384(exporter_secret, salt = \"pal3-sas-v1\", info = lp(sender_pk) || lp(receiver_pk) || lp(root) || lp(offer_id) || nonce_S || nonce_R, 8 bytes) read as a big-endian u64, mod 10^8, printed as 8 digits with leading zeros. lp is a u32be length prefix. All inputs are byte strings given in hex (sender_pk and receiver_pk are the 32-byte Ed25519 keys, root is the 48-byte SHA-384 root, offer_id is 16 bytes). commitment = SHA-384(\"pal3-sas-commit-v1\" || nonce_S) and the revealed nonce_S must match it before a code is computed. handshakeSas: okm = HKDF-SHA-384(exporter_secret_0, salt = \"pal3-handshake-sas-v1\", info = \"sas\", 16 bytes); digits = u64be(okm[0..8]) mod 10^8 printed as 8 digits with leading zeros; word i (0..3) = wordlist[okm[8 + i] & 0x3f]; the phrase joins the four words with \"-\".",
+  "wordlist": [
+    "amber",
+    "anchor",
+    "apollo",
+    "atlas",
+    "aurora",
+    "beacon",
+    "bison",
+    "breeze",
+    "canyon",
+    "cedar",
+    "cobalt",
+    "comet",
+    "coral",
+    "cosmos",
+    "crystal",
+    "cypress",
+    "delta",
+    "dolphin",
+    "dragon",
+    "dune",
+    "eagle",
+    "echo",
+    "ember",
+    "emerald",
+    "falcon",
+    "fjord",
+    "flint",
+    "forest",
+    "frost",
+    "galaxy",
+    "garnet",
+    "glacier",
+    "granite",
+    "harbor",
+    "horizon",
+    "husky",
+    "indigo",
+    "island",
+    "ivory",
+    "jade",
+    "jasper",
+    "juniper",
+    "kestrel",
+    "lagoon",
+    "lantern",
+    "laurel",
+    "legend",
+    "lotus",
+    "magnet",
+    "maple",
+    "marble",
+    "meadow",
+    "mercury",
+    "meteor",
+    "mirage",
+    "monarch",
+    "nebula",
+    "nectar",
+    "nimbus",
+    "nomad",
+    "obsidian",
+    "ocean",
+    "olive",
+    "onyx"
+  ],
+  "quickDropSas": [
+    {
+      "description": "Baseline: sender A, receiver B, 8 digits",
+      "exporterSecretHex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "senderPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "receiverPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "rootHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044",
+      "offerIdHex": "0f0e0d0c0b0a09080706050403020100",
+      "nonceSHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "nonceRHex": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "expectedSas": "45911886"
+    },
+    {
+      "description": "Another root and offer: the code is bound to the offer",
+      "exporterSecretHex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "senderPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "receiverPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "rootHex": "0736ada1b4d09934a0916b6b61de25f7537af6f14ee57641678831c9889972a4620396afa6607c99dea492e54808626a",
+      "offerIdHex": "f0e0d0c0b0a090807060504030201000",
+      "nonceSHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "nonceRHex": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "mustDifferFromCase": 0,
+      "expectedSas": "17030120"
+    },
+    {
+      "description": "Leading zeros are kept: the code always has 8 digits",
+      "exporterSecretHex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "senderPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "receiverPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "rootHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044",
+      "offerIdHex": "0f0e0d0c0b0a09080706050403020100",
+      "nonceSHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "nonceRHex": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c30000001a",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "expectedSas": "00062564"
+    },
+    {
+      "description": "Swapped roles: the receiver acting as sender (sender_pk and receiver_pk exchanged) gets a different code",
+      "exporterSecretHex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "senderPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "receiverPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "rootHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044",
+      "offerIdHex": "0f0e0d0c0b0a09080706050403020100",
+      "nonceSHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "nonceRHex": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "mustDifferFromCase": 0,
+      "expectedSas": "68855009"
+    },
+    {
+      "description": "A man in the middle holds a session with another exporter secret and gets a different code",
+      "exporterSecretHex": "4444444444444444444444444444444444444444444444444444444444444444",
+      "senderPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "receiverPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "rootHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044",
+      "offerIdHex": "0f0e0d0c0b0a09080706050403020100",
+      "nonceSHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "nonceRHex": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "mustDifferFromCase": 0,
+      "expectedSas": "44426974"
+    }
+  ],
+  "handshakeSas": [
+    {
+      "description": "Baseline: the exporter secret of the beacon vector",
+      "exporterSecretHex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "expectedDigits": "30966935",
+      "expectedWords": [
+        "island",
+        "nectar",
+        "canyon",
+        "legend"
+      ],
+      "expectedPhrase": "island-nectar-canyon-legend"
+    },
+    {
+      "description": "Another exporter secret gives another code",
+      "exporterSecretHex": "4444444444444444444444444444444444444444444444444444444444444444",
+      "expectedDigits": "69218765",
+      "expectedWords": [
+        "lotus",
+        "delta",
+        "cobalt",
+        "forest"
+      ],
+      "expectedPhrase": "lotus-delta-cobalt-forest"
+    },
+    {
+      "description": "Leading zeros are kept: the digits are always 8 characters",
+      "exporterSecretHex": "71717171717171717171717171717171717171717171717171717171000000d7",
+      "expectedDigits": "00087129",
+      "expectedWords": [
+        "emerald",
+        "laurel",
+        "cobalt",
+        "crystal"
+      ],
+      "expectedPhrase": "emerald-laurel-cobalt-crystal"
+    },
+    {
+      "description": "All-zero exporter secret",
+      "exporterSecretHex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "expectedDigits": "71107781",
+      "expectedWords": [
+        "dolphin",
+        "dolphin",
+        "maple",
+        "glacier"
+      ],
+      "expectedPhrase": "dolphin-dolphin-maple-glacier"
+    }
+  ],
+  "handshakeSasRejected": [
+    {
+      "description": "The exporter secret is 31 bytes instead of 32",
+      "exporterSecretHex": "01010101010101010101010101010101010101010101010101010101010101",
+      "expectedError": "E_PAL3_HANDSHAKE_INVALID"
+    },
+    {
+      "description": "The exporter secret is 33 bytes instead of 32",
+      "exporterSecretHex": "010101010101010101010101010101010101010101010101010101010101010101",
+      "expectedError": "E_PAL3_HANDSHAKE_INVALID"
+    },
+    {
+      "description": "The exporter secret is 0 bytes instead of 32",
+      "exporterSecretHex": "",
+      "expectedError": "E_PAL3_HANDSHAKE_INVALID"
+    }
+  ],
+  "quickDropSasRejected": [
+    {
+      "description": "The revealed nonce_S does not match the commitment",
+      "exporterSecretHex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "senderPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "receiverPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "rootHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044",
+      "offerIdHex": "0f0e0d0c0b0a09080706050403020100",
+      "nonceSHex": "5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b",
+      "nonceRHex": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "expectedError": "E_PAL3_SAS_COMMITMENT_MISMATCH"
+    },
+    {
+      "description": "The exporter secret is 31 bytes instead of 32",
+      "exporterSecretHex": "33333333333333333333333333333333333333333333333333333333333333",
+      "senderPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "receiverPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "rootHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044",
+      "offerIdHex": "0f0e0d0c0b0a09080706050403020100",
+      "nonceSHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "nonceRHex": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "expectedError": "E_PAL3_SAS_INVALID"
+    },
+    {
+      "description": "nonce_R is 16 bytes instead of 32",
+      "exporterSecretHex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "senderPkHex": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "receiverPkHex": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "rootHex": "a02b7ed5eb01c7daa257bb1d8455d1b3528ac3f10c1c949abcb5580e4dfa10d5cdb384cd1eb55fc82a8ce87e8b3e9044",
+      "offerIdHex": "0f0e0d0c0b0a09080706050403020100",
+      "nonceSHex": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
+      "nonceRHex": "11111111111111111111111111111111",
+      "commitmentHex": "cd7f24d619c05215a4b56490184860a6c1271dfc1dff0543bce2ecd5a978b200f0a68fdd67865250c8da9b5e26c3e6bf",
+      "expectedError": "E_PAL3_SAS_INVALID"
+    }
+  ]
+}

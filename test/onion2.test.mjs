@@ -6,7 +6,7 @@ import { ed25519PublicKey, edSeedToX25519, sealOpen } from '../sealedbox.mjs';
 
 const vectors = JSON.parse(readFileSync(new URL('../test-vectors/v3/pal3-v0.6-onion2-vectors.json', import.meta.url), 'utf8'));
 const spec = readFileSync(new URL('../spec/v3/PAL-3.0.md', import.meta.url), 'utf8');
-const sha256Hex = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const sha384Hex = (bytes) => createHash('sha384').update(bytes).digest('hex');
 const hex = (text) => Buffer.from(text, 'hex');
 
 const capacity = (cellSize) => cellSize - 243;
@@ -32,7 +32,7 @@ test('onion2_three_hop_cell_when_peeled_hop_by_hop_yields_next_hop_and_payload',
     assert.equal(ed25519PublicKey(seed).toString('hex'), hop.relayPublicKeyHex);
 
     const head = cell.subarray(0, 1 + layerLength(hop.remainingHops, v.cellSize));
-    assert.equal(sha256Hex(head), hop.replayKeyHex);
+    assert.equal(sha384Hex(head), hop.replayKeyHex);
     const plain = sealOpen(head.subarray(1), edSeedToX25519(seed));
     assert.ok(plain, `layer for remaining hops ${hop.remainingHops} opens`);
     assert.equal(plain.subarray(0, 32).toString('hex'), hop.nextPublicKeyHex);
@@ -62,13 +62,13 @@ test('onion2_replay_key_when_padding_changes_stays_the_same', () => {
   const cell = hex(hop.cellHex);
   assert.ok(cell.length > 1 + hop.layerLength);
   cell[cell.length - 1] ^= 0xff;
-  assert.equal(sha256Hex(cell.subarray(0, 1 + hop.layerLength)), hop.replayKeyHex);
+  assert.equal(sha384Hex(cell.subarray(0, 1 + hop.layerLength)), hop.replayKeyHex);
 });
 
 test('onion2_fragments_when_reassembled_give_the_payload', () => {
   const f = vectors.fragmentation;
   const payload = Buffer.from(Array.from({ length: f.payloadLength }, (_, i) => i & 0xff));
-  assert.equal(sha256Hex(payload), f.payloadSha256Hex);
+  assert.equal(sha384Hex(payload), f.payloadHashHex);
   const chunk = capacity(f.cellSize) - 12;
   assert.equal(f.fragmentCount, Math.ceil(f.payloadLength / chunk));
   const parts = [];
@@ -80,7 +80,7 @@ test('onion2_fragments_when_reassembled_give_the_payload', () => {
     const data = payload.subarray(i * chunk, (i + 1) * chunk);
     assert.equal(12 + data.length, f.fragmentLengths[i]);
     assert.ok(f.fragmentLengths[i] <= capacity(f.cellSize));
-    assert.equal(sha256Hex(Buffer.concat([head, data])), f.fragmentSha256Hex[i]);
+    assert.equal(sha384Hex(Buffer.concat([head, data])), f.fragmentHashHex[i]);
     parts.push(data);
   }
   assert.ok(Buffer.concat(parts).equals(payload));

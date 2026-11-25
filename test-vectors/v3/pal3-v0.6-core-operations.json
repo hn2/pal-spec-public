@@ -1,5 +1,5 @@
 {
-  "specVersion": "0.6.0",
+  "specVersion": "0.6.20",
   "section": "7.1",
   "encoding": "request body and response result are PAL-CBOR maps (A.3); byte strings are raw bytes; u64 values are integers up to 2^64-1",
   "operations": [
@@ -66,6 +66,85 @@
       },
       "errors": [
         "E_PAL3_ACCESS_DENIED"
+      ]
+    },
+    {
+      "name": "device.revocation.push",
+      "capability": null,
+      "caller": "a pal that is the identity of the session",
+      "request": {
+        "statement": "text, base64 of a revocation_statement (A.1), at most 65536 characters"
+      },
+      "response": {
+        "ok": "true",
+        "applied": "bool",
+        "version": "decimal text"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED",
+        "E_PAL3_INVALID_INPUT",
+        "E_PAL3_REVOCATION_INVALID",
+        "E_PAL3_REVOCATION_ISSUER_MISMATCH",
+        "E_BUSY",
+        "E_PAL3_UNSUPPORTED_OP"
+      ]
+    },
+    {
+      "name": "device.revocation.get",
+      "capability": null,
+      "caller": "a pal",
+      "request": {
+        "identity": "optional, 64 lowercase hexadecimal characters of an Ed25519 identity key; empty returns the own statement"
+      },
+      "response": {
+        "ok": "true",
+        "statement": "text (base64) or null"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED",
+        "E_PAL3_INVALID_INPUT",
+        "E_PAL3_UNSUPPORTED_OP"
+      ]
+    },
+    {
+      "name": "device.list.push",
+      "capability": "seal.v1",
+      "caller": "a pal that is the identity of the session",
+      "request": {
+        "list": "text, base64 of a device_list (11.4), at most 90112 characters"
+      },
+      "response": {
+        "ok": "true",
+        "applied": "bool",
+        "revision": "decimal text"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED",
+        "E_PAL3_INVALID_INPUT",
+        "E_PAL3_DEVICE_LIST_INVALID",
+        "E_PAL3_DEVICE_LIST_ISSUER_MISMATCH",
+        "E_PAL3_DEVICE_LIST_STALE",
+        "E_PAL3_DEVICE_LIST_ENCKEY_CHANGED",
+        "E_PAL3_SEAL_KEY_INVALID",
+        "E_BUSY",
+        "E_PAL3_UNSUPPORTED_OP"
+      ]
+    },
+    {
+      "name": "device.list.get",
+      "capability": "seal.v1",
+      "caller": "a pal",
+      "request": {
+        "identity": "optional, 64 lowercase hexadecimal characters of an Ed25519 identity key; empty returns the own list"
+      },
+      "response": {
+        "ok": "true",
+        "list": "text (base64) or null"
+      },
+      "errors": [
+        "E_PAL3_ACCESS_DENIED",
+        "E_PAL3_INVALID_INPUT",
+        "E_PAL3_UNSUPPORTED_OP"
       ]
     },
     {
@@ -188,11 +267,10 @@
       "caller": "a proven peer",
       "request": {
         "shareId": "text 32 hex",
-        "serve": "optional bool, true opts the caller in",
-        "hints": "optional array of at most 4 { host, port }"
+        "serve": "optional bool, true opts the caller in"
       },
       "response": {
-        "sources": "array of at most 16 { edPk, dsaPk, hints, observed }"
+        "sources": "array of at most 16 { edPk, dsaPk }"
       },
       "errors": [
         "E_SWARM_PROOF_REQUIRED",
@@ -207,12 +285,11 @@
       "request": {
         "relay": "bool",
         "capacity": "u8 0-4",
-        "stationId": "text 32 hex",
-        "hints": "optional array of at most 4 { host, port }"
+        "stationId": "text 32 hex"
       },
       "response": {
         "depth": "u8",
-        "parent": "null or { edPk: text 64 hex, dsaPk: text hex, hints: array of at most 4 { host, port } } (8.5 item 5)"
+        "parent": "null or { edPk: text 64 hex, dsaPk: text hex } (8.5 item 5)"
       },
       "errors": [
         "E_SWARM_PROOF_REQUIRED",
@@ -245,7 +322,7 @@
       },
       "response": {
         "depth": "u8",
-        "parent": "null or { edPk: text 64 hex, dsaPk: text hex, hints: array of at most 4 { host, port } } (8.5 item 5)"
+        "parent": "null or { edPk: text 64 hex, dsaPk: text hex } (8.5 item 5)"
       },
       "errors": [
         "E_SWARM_PROOF_REQUIRED",

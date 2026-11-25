@@ -1,12 +1,12 @@
 {
- "specVersion": "0.6.8",
- "section": "3.2 stateless reset",
- "statelessResetToken": [
-  {
-   "description": "reset_token = HMAC-SHA-256(reset_key, \"pal3-stateless-reset-v1\" || cid)[0..16]",
-   "resetKeyHex": "4444444444444444444444444444444444444444444444444444444444444444",
-   "connectionIdHex": "0102030405060708",
-   "tokenHex": "a35a2c28584504a94fdebee3a6d41c98"
-  }
- ]
+  "specVersion": "0.6.8",
+  "section": "3.2 stateless reset",
+  "statelessResetToken": [
+    {
+      "description": "reset_token = HMAC-SHA-384(reset_key, \"pal3-stateless-reset-v1\" || cid)[0..16]",
+      "resetKeyHex": "4444444444444444444444444444444444444444444444444444444444444444",
+      "connectionIdHex": "0102030405060708",
+      "tokenHex": "31d11d75860e5c0154bd658fdf7fd116"
+    }
+  ]
 }

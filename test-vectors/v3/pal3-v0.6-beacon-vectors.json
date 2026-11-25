@@ -1,32 +1,32 @@
 {
- "specVersion": "0.6.7",
- "section": "4 R1 R3 pair beacon keys",
- "pairBeacon": [
-  {
-   "description": "pair_beacon_key = HKDF-Expand(exporter_secret_0, \"pal3-pair-beacon-v1\", 32); tag = HMAC-SHA-256(HKDF-Expand(pair_beacon_key, \"pal3-lan-v3\", 32), announcer_identity_digest || u64be(floor(unix_sec / 900)))[0..16]; location = HMAC-SHA-256(HKDF-Expand(pair_beacon_key, \"pal3-wan-mailbox-v3\", 32), recipient_identity_digest || u64be(epoch))",
-   "exporterSecret0Hex": "3333333333333333333333333333333333333333333333333333333333333333",
-   "pairBeaconKeyHex": "ee33719b5fe3e3487b244519a9d2d694c64167563993d6bb15db05380e61117a",
-   "unixTimeMs": 1760000000000,
-   "mailbox": [
+  "specVersion": "0.6.7",
+  "section": "4 R1 R3 pair beacon keys",
+  "pairBeacon": [
     {
-     "recipientIdentityDigestHex": "1111111111111111111111111111111111111111111111111111111111111111",
-     "locationHex": "69b79bc1a3709bdd437ee9c20077e8a76840ebcc0218c8a5adfd294de1564d00"
-    },
-    {
-     "recipientIdentityDigestHex": "2222222222222222222222222222222222222222222222222222222222222222",
-     "locationHex": "e32dda0f0920e82350f36d7a4f373f55cbbe10e29fd37543bb845afaec603eee"
+      "description": "pair_beacon_key = HKDF-Expand(exporter_secret_0, \"pal3-pair-beacon-v1\", 32); tag = HMAC-SHA-384(HKDF-Expand(pair_beacon_key, \"pal3-lan-v3\", 32), announcer_identity_digest || u64be(floor(unix_sec / 900)))[0..16]; location = HMAC-SHA-384(HKDF-Expand(pair_beacon_key, \"pal3-wan-mailbox-v3\", 32), recipient_identity_digest || u64be(epoch))",
+      "exporterSecret0Hex": "3333333333333333333333333333333333333333333333333333333333333333",
+      "pairBeaconKeyHex": "849c7a17956b222b1bafc282df5a8f148edf5ec91e1e7624de0d5ff4ad8b464f",
+      "unixTimeMs": 1760000000000,
+      "mailbox": [
+        {
+          "recipientIdentityDigestHex": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+          "locationHex": "048e473913fc6d1ac61d1e162426c959c5d48f9ca87d644e2e24bf6d833a1b39b3fbb6cff50b8c145b4467469a2bf2a8"
+        },
+        {
+          "recipientIdentityDigestHex": "222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+          "locationHex": "f16973aa0ce1a6e34458be760b28e9abbaa550cf3914a00c8879eb7e4daf06e233a598a86b9dae00cc8119b8f43730f1"
+        }
+      ],
+      "lanTag": [
+        {
+          "announcerIdentityDigestHex": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111",
+          "tagHex": "a483c7de0ac744e131990a512348412c"
+        },
+        {
+          "announcerIdentityDigestHex": "222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222",
+          "tagHex": "9f704f2e63dfe2c8b33219a9e29df7e9"
+        }
+      ]
     }
-   ],
-   "lanTag": [
-    {
-     "announcerIdentityDigestHex": "1111111111111111111111111111111111111111111111111111111111111111",
-     "tagHex": "66b3e985a7e4cf4937561f19a1492d87"
-    },
-    {
-     "announcerIdentityDigestHex": "2222222222222222222222222222222222222222222222222222222222222222",
-     "tagHex": "67f4e38c778a1fa8b9f141d9a4ed2b08"
-    }
-   ]
-  }
- ]
+  ]
 }

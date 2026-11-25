@@ -1,0 +1,809 @@
+{
+  "specVersion": "0.6.22",
+  "section": "14.3",
+  "description": "Peer exchange without addresses: what a receiver learns from a pex.exchange response and what a responder sends.",
+  "generatedBy": "bin/generate-v0.6-pex-vectors.mjs",
+  "limits": {
+    "maxEntries": 32,
+    "maxUnverifiedPerReporter": 16,
+    "peerPkHexLength": 64,
+    "rootHashHexLength": 96
+  },
+  "receive": [
+    {
+      "name": "plainKeysAreLearned",
+      "description": "Three entries with a public key only",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "0101010101010101010101010101010101010101010101010101010101010101"
+          },
+          {
+            "peerPk": "0202020202020202020202020202020202020202020202020202020202020202"
+          },
+          {
+            "peerPk": "0303030303030303030303030303030303030303030303030303030303030303"
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "0101010101010101010101010101010101010101010101010101010101010101",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "0202020202020202020202020202020202020202020202020202020202020202",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "0303030303030303030303030303030303030303030303030303030303030303",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "0101010101010101010101010101010101010101010101010101010101010101",
+          "0202020202020202020202020202020202020202020202020202020202020202",
+          "0303030303030303030303030303030303030303030303030303030303030303"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    },
+    {
+      "name": "addressFieldsAreIgnored",
+      "description": "host and port in an entry are ignored and never stored",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "0101010101010101010101010101010101010101010101010101010101010101",
+            "host": "203.0.113.7",
+            "port": 52474
+          },
+          {
+            "peerPk": "0202020202020202020202020202020202020202020202020202020202020202",
+            "host": "example.org",
+            "port": 1
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "0101010101010101010101010101010101010101010101010101010101010101",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "0202020202020202020202020202020202020202020202020202020202020202",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "0101010101010101010101010101010101010101010101010101010101010101",
+          "0202020202020202020202020202020202020202020202020202020202020202"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    },
+    {
+      "name": "upperCaseKeyIsRegisteredLowerCase",
+      "description": "The key is registered in lower case",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "ABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB"
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "abababababababababababababababababababababababababababababababab",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "abababababababababababababababababababababababababababababababab"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    },
+    {
+      "name": "malformedEntriesAreSkipped",
+      "description": "A short key, a non-hex key, a missing key and a non-object entry are skipped; the valid one is kept",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "ababababababababababababababababababababababababababababababab"
+          },
+          {
+            "peerPk": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+          },
+          {},
+          null,
+          {
+            "peerPk": "0505050505050505050505050505050505050505050505050505050505050505"
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "0505050505050505050505050505050505050505050505050505050505050505",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "0505050505050505050505050505050505050505050505050505050505050505"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    },
+    {
+      "name": "entriesBeyondTheThirtySecondAreNotRead",
+      "description": "The 33rd entry is the reporter itself and would be verified if it were read; it is not read",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "1010101010101010101010101010101010101010101010101010101010101010"
+          },
+          {
+            "peerPk": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          {
+            "peerPk": "1212121212121212121212121212121212121212121212121212121212121212"
+          },
+          {
+            "peerPk": "1313131313131313131313131313131313131313131313131313131313131313"
+          },
+          {
+            "peerPk": "1414141414141414141414141414141414141414141414141414141414141414"
+          },
+          {
+            "peerPk": "1515151515151515151515151515151515151515151515151515151515151515"
+          },
+          {
+            "peerPk": "1616161616161616161616161616161616161616161616161616161616161616"
+          },
+          {
+            "peerPk": "1717171717171717171717171717171717171717171717171717171717171717"
+          },
+          {
+            "peerPk": "1818181818181818181818181818181818181818181818181818181818181818"
+          },
+          {
+            "peerPk": "1919191919191919191919191919191919191919191919191919191919191919"
+          },
+          {
+            "peerPk": "1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a"
+          },
+          {
+            "peerPk": "1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b"
+          },
+          {
+            "peerPk": "1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c"
+          },
+          {
+            "peerPk": "1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d"
+          },
+          {
+            "peerPk": "1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e"
+          },
+          {
+            "peerPk": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"
+          },
+          {
+            "peerPk": "2020202020202020202020202020202020202020202020202020202020202020"
+          },
+          {
+            "peerPk": "2121212121212121212121212121212121212121212121212121212121212121"
+          },
+          {
+            "peerPk": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          {
+            "peerPk": "2323232323232323232323232323232323232323232323232323232323232323"
+          },
+          {
+            "peerPk": "2424242424242424242424242424242424242424242424242424242424242424"
+          },
+          {
+            "peerPk": "2525252525252525252525252525252525252525252525252525252525252525"
+          },
+          {
+            "peerPk": "2626262626262626262626262626262626262626262626262626262626262626"
+          },
+          {
+            "peerPk": "2727272727272727272727272727272727272727272727272727272727272727"
+          },
+          {
+            "peerPk": "2828282828282828282828282828282828282828282828282828282828282828"
+          },
+          {
+            "peerPk": "2929292929292929292929292929292929292929292929292929292929292929"
+          },
+          {
+            "peerPk": "2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a"
+          },
+          {
+            "peerPk": "2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b"
+          },
+          {
+            "peerPk": "2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c"
+          },
+          {
+            "peerPk": "2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d"
+          },
+          {
+            "peerPk": "2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e"
+          },
+          {
+            "peerPk": "2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f2f"
+          },
+          {
+            "peerPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "1010101010101010101010101010101010101010101010101010101010101010",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1111111111111111111111111111111111111111111111111111111111111111",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1212121212121212121212121212121212121212121212121212121212121212",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1313131313131313131313131313131313131313131313131313131313131313",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1414141414141414141414141414141414141414141414141414141414141414",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1515151515151515151515151515151515151515151515151515151515151515",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1616161616161616161616161616161616161616161616161616161616161616",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1717171717171717171717171717171717171717171717171717171717171717",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1818181818181818181818181818181818181818181818181818181818181818",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1919191919191919191919191919191919191919191919191919191919191919",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "1010101010101010101010101010101010101010101010101010101010101010",
+          "1111111111111111111111111111111111111111111111111111111111111111",
+          "1212121212121212121212121212121212121212121212121212121212121212",
+          "1313131313131313131313131313131313131313131313131313131313131313",
+          "1414141414141414141414141414141414141414141414141414141414141414",
+          "1515151515151515151515151515151515151515151515151515151515151515",
+          "1616161616161616161616161616161616161616161616161616161616161616",
+          "1717171717171717171717171717171717171717171717171717171717171717",
+          "1818181818181818181818181818181818181818181818181818181818181818",
+          "1919191919191919191919191919191919191919191919191919191919191919",
+          "1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a",
+          "1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b1b",
+          "1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c",
+          "1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d",
+          "1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e",
+          "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    },
+    {
+      "name": "responseThatIsNotAnArrayLearnsNothing",
+      "description": "peers is an object",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": {
+          "peerPk": "0101010101010101010101010101010101010101010101010101010101010101"
+        }
+      },
+      "expected": {
+        "learned": [],
+        "storedPeerPks": [],
+        "storedFieldNames": []
+      }
+    },
+    {
+      "name": "reporterAnnouncingItselfIsVerified",
+      "description": "An entry equal to the authenticated reporter is marked verified; third-party entries are not",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "0707070707070707070707070707070707070707070707070707070707070707"
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+            "verified": true,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "0707070707070707070707070707070707070707070707070707070707070707",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "0707070707070707070707070707070707070707070707070707070707070707",
+          "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    },
+    {
+      "name": "oneReporterCannotFillTheSwarm",
+      "description": "At most 16 unverified entries per reporter",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "before": [],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "4040404040404040404040404040404040404040404040404040404040404040"
+          },
+          {
+            "peerPk": "4141414141414141414141414141414141414141414141414141414141414141"
+          },
+          {
+            "peerPk": "4242424242424242424242424242424242424242424242424242424242424242"
+          },
+          {
+            "peerPk": "4343434343434343434343434343434343434343434343434343434343434343"
+          },
+          {
+            "peerPk": "4444444444444444444444444444444444444444444444444444444444444444"
+          },
+          {
+            "peerPk": "4545454545454545454545454545454545454545454545454545454545454545"
+          },
+          {
+            "peerPk": "4646464646464646464646464646464646464646464646464646464646464646"
+          },
+          {
+            "peerPk": "4747474747474747474747474747474747474747474747474747474747474747"
+          },
+          {
+            "peerPk": "4848484848484848484848484848484848484848484848484848484848484848"
+          },
+          {
+            "peerPk": "4949494949494949494949494949494949494949494949494949494949494949"
+          },
+          {
+            "peerPk": "4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a"
+          },
+          {
+            "peerPk": "4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b"
+          },
+          {
+            "peerPk": "4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c"
+          },
+          {
+            "peerPk": "4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d"
+          },
+          {
+            "peerPk": "4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e"
+          },
+          {
+            "peerPk": "4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f"
+          },
+          {
+            "peerPk": "5050505050505050505050505050505050505050505050505050505050505050"
+          },
+          {
+            "peerPk": "5151515151515151515151515151515151515151515151515151515151515151"
+          },
+          {
+            "peerPk": "5252525252525252525252525252525252525252525252525252525252525252"
+          },
+          {
+            "peerPk": "5353535353535353535353535353535353535353535353535353535353535353"
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "4040404040404040404040404040404040404040404040404040404040404040",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4141414141414141414141414141414141414141414141414141414141414141",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4242424242424242424242424242424242424242424242424242424242424242",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4343434343434343434343434343434343434343434343434343434343434343",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4444444444444444444444444444444444444444444444444444444444444444",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4545454545454545454545454545454545454545454545454545454545454545",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4646464646464646464646464646464646464646464646464646464646464646",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4747474747474747474747474747474747474747474747474747474747474747",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4848484848484848484848484848484848484848484848484848484848484848",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4949494949494949494949494949494949494949494949494949494949494949",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          },
+          {
+            "peerPk": "4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "4040404040404040404040404040404040404040404040404040404040404040",
+          "4141414141414141414141414141414141414141414141414141414141414141",
+          "4242424242424242424242424242424242424242424242424242424242424242",
+          "4343434343434343434343434343434343434343434343434343434343434343",
+          "4444444444444444444444444444444444444444444444444444444444444444",
+          "4545454545454545454545454545454545454545454545454545454545454545",
+          "4646464646464646464646464646464646464646464646464646464646464646",
+          "4747474747474747474747474747474747474747474747474747474747474747",
+          "4848484848484848484848484848484848484848484848484848484848484848",
+          "4949494949494949494949494949494949494949494949494949494949494949",
+          "4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a4a",
+          "4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b",
+          "4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c4c",
+          "4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d4d",
+          "4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e",
+          "4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    },
+    {
+      "name": "thirdPartyReportNeverOverwritesAKnownPeer",
+      "description": "The peer is already known from another reporter and stays so",
+      "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+      "reporterPk": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2",
+      "before": [
+        {
+          "peerPk": "0909090909090909090909090909090909090909090909090909090909090909",
+          "reporterPk": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+        }
+      ],
+      "response": {
+        "peers": [
+          {
+            "peerPk": "0909090909090909090909090909090909090909090909090909090909090909"
+          }
+        ]
+      },
+      "expected": {
+        "learned": [
+          {
+            "peerPk": "0909090909090909090909090909090909090909090909090909090909090909",
+            "verified": false,
+            "reporter": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          }
+        ],
+        "storedPeerPks": [
+          "0909090909090909090909090909090909090909090909090909090909090909"
+        ],
+        "storedFieldNames": [
+          "completedPieces",
+          "expiresAt",
+          "failures",
+          "isHighId",
+          "peerPk",
+          "reporter",
+          "verified"
+        ]
+      }
+    }
+  ],
+  "respond": {
+    "rootHashHex": "abababababababababababababababababababababababababababababababababababababababababababababababab",
+    "registered": 40,
+    "response": {
+      "peers": [
+        {
+          "peerPk": "7171717171717171717171717171717171717171717171717171717171717171"
+        },
+        {
+          "peerPk": "7272727272727272727272727272727272727272727272727272727272727272"
+        },
+        {
+          "peerPk": "7373737373737373737373737373737373737373737373737373737373737373"
+        },
+        {
+          "peerPk": "7474747474747474747474747474747474747474747474747474747474747474"
+        },
+        {
+          "peerPk": "7575757575757575757575757575757575757575757575757575757575757575"
+        },
+        {
+          "peerPk": "7676767676767676767676767676767676767676767676767676767676767676"
+        },
+        {
+          "peerPk": "7777777777777777777777777777777777777777777777777777777777777777"
+        },
+        {
+          "peerPk": "7878787878787878787878787878787878787878787878787878787878787878"
+        },
+        {
+          "peerPk": "7979797979797979797979797979797979797979797979797979797979797979"
+        },
+        {
+          "peerPk": "7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a7a"
+        },
+        {
+          "peerPk": "7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b7b"
+        },
+        {
+          "peerPk": "7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c"
+        },
+        {
+          "peerPk": "7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d"
+        },
+        {
+          "peerPk": "7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e7e"
+        },
+        {
+          "peerPk": "7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f"
+        },
+        {
+          "peerPk": "8080808080808080808080808080808080808080808080808080808080808080"
+        },
+        {
+          "peerPk": "8181818181818181818181818181818181818181818181818181818181818181"
+        },
+        {
+          "peerPk": "8282828282828282828282828282828282828282828282828282828282828282"
+        },
+        {
+          "peerPk": "8383838383838383838383838383838383838383838383838383838383838383"
+        },
+        {
+          "peerPk": "8484848484848484848484848484848484848484848484848484848484848484"
+        },
+        {
+          "peerPk": "8585858585858585858585858585858585858585858585858585858585858585"
+        },
+        {
+          "peerPk": "8686868686868686868686868686868686868686868686868686868686868686"
+        },
+        {
+          "peerPk": "8787878787878787878787878787878787878787878787878787878787878787"
+        },
+        {
+          "peerPk": "8888888888888888888888888888888888888888888888888888888888888888"
+        },
+        {
+          "peerPk": "8989898989898989898989898989898989898989898989898989898989898989"
+        },
+        {
+          "peerPk": "8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a8a"
+        },
+        {
+          "peerPk": "8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b8b"
+        },
+        {
+          "peerPk": "8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c8c"
+        },
+        {
+          "peerPk": "8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d8d"
+        },
+        {
+          "peerPk": "8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e"
+        },
+        {
+          "peerPk": "8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f8f"
+        },
+        {
+          "peerPk": "9090909090909090909090909090909090909090909090909090909090909090"
+        }
+      ]
+    },
+    "expected": {
+      "peerCount": 32,
+      "entryFieldNames": [
+        "peerPk"
+      ],
+      "invalidRootHashError": "E_PAL3_PEX_INVALID",
+      "otherOperation": "not handled"
+    }
+  }
+}

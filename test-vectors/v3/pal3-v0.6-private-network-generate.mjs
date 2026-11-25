@@ -39,6 +39,7 @@ const profileSigned = Buffer.from(PROFILE_CONTEXT + JSON.stringify({
   name: profile.name, admin: profile.admin, discoveryServers: profile.discoveryServers, relays: profile.relays,
   members: profile.members.map((m) => ({ publicKey: m.publicKey, name: m.name, revoked: m.revoked })),
   privacyMode: profile.privacyMode, issuedAt: profile.issuedAt, version: profile.version, expiresAt: profile.expiresAt,
+  networkId: null, networkCreator: null, networkNonce: null, networkCreatedAtMs: null,
 }), 'utf8');
 
 const handover = {

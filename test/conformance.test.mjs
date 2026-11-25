@@ -11,6 +11,7 @@ import {
   runSwarmValidation,
   runCoreValidation,
   runPrimitiveValidation,
+  runIdentifierValidation,
   encodePalCbor,
 } from '../validate.mjs';
 
@@ -110,8 +111,14 @@ test('section 7.1 operations are specified and the hybrid-signed objects verify 
   assert.ok(r.operations >= 13);
 });
 
-test('BLAKE2b-256 Merkle trees, cookies, proof of work, PSK binder and manifest revision rules match the vectors', () => {
+test('SHA-384 Merkle trees, SHA-384 identifiers, cookies, proof of work, PSK binder and manifest revision rules match the vectors', () => {
   const r = runPrimitiveValidation();
   assert.equal(r.ok, true);
   assert.ok(r.merkle >= 6);
+});
+
+test('identifiers of section 14.5 are 96-hex SHA-384 values with per-kind domain separation', () => {
+  const r = runIdentifierValidation();
+  assert.equal(r.ok, true);
+  assert.equal(r.kinds, 5);
 });

@@ -1,0 +1,1838 @@
+{
+  "specVersion": "0.6.22",
+  "section": "13.2, 13.4, 13.5, 13.6",
+  "description": "Private network profile acceptance (13.4, 13.6), stored-profile verification and lockdown, member and host decisions (13.5), and the network fields of the signed bytes (13.2).",
+  "generatedBy": "bin/generate-v0.6-private-network-accept-vectors.mjs",
+  "nowMs": 1795521600000,
+  "keys": {
+    "admin": {
+      "seedHex": "0101010101010101010101010101010101010101010101010101010101010101",
+      "publicKey": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c"
+    },
+    "alice": {
+      "seedHex": "0202020202020202020202020202020202020202020202020202020202020202",
+      "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394"
+    },
+    "bob": {
+      "seedHex": "0303030303030303030303030303030303030303030303030303030303030303",
+      "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1"
+    },
+    "otherAdmin": {
+      "seedHex": "0404040404040404040404040404040404040404040404040404040404040404",
+      "publicKey": "ca93ac1705187071d67b83c7ff0efe8108e8ec4530575d7726879333dbdabe7c"
+    },
+    "newAdmin": {
+      "seedHex": "0505050505050505050505050505050505050505050505050505050505050505",
+      "publicKey": "6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1"
+    }
+  },
+  "limits": {
+    "fileBytes": 1048576,
+    "issuedAheadMs": 86400000,
+    "maxValidityMs": 31622400000
+  },
+  "networkId": {
+    "nonceHex": "0707070707070707070707070707070707070707070707070707070707070707",
+    "createdAtMs": 1793491200000,
+    "creator": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+    "expectedHex": "fcd823afe434032ef2534fce412eb7c85395562b370dc96dce9fc8f46a3392a9efa63c74c922c7255c002161ed9dc9f0"
+  },
+  "handoverExample": {
+    "name": "Example Network",
+    "from": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+    "to": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+    "issuedAt": "2026-11-23T12:00:00.000Z",
+    "expiresAt": "2026-12-23T12:00:00.000Z",
+    "signature": "e332a571293e3f4495e3bb4110d09167d24f7f2f10f1b842f32637be038a9718411e67cae0377a38fdb960fc76434b79972f11a61f12a5eb26f1dfa6a991fd01"
+  },
+  "accept": [
+    {
+      "name": "firstJoinWithConfirmedAdminKey",
+      "description": "No network yet; the user confirmed the administrator key",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": null,
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "firstJoinWithoutConfirmation",
+      "description": "No network yet and no out-of-band confirmation",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": null,
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_CONFIRM_ADMIN"
+      }
+    },
+    {
+      "name": "firstJoinNamingAnotherAdministrator",
+      "description": "The user named a different key than the file is signed by",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": null,
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": "ca93ac1705187071d67b83c7ff0efe8108e8ec4530575d7726879333dbdabe7c",
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_ADMIN_MISMATCH"
+      }
+    },
+    {
+      "name": "currentAdministratorNewerVersion",
+      "description": "Same administrator, version above the floor, no confirmation needed",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {
+          "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c": 3
+        },
+        "storedSignature": "aa",
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 4,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "3fb4dba191ebe87a63c3eb93af586556ccf071b10670065f8b4ed83419112fc5b81494bd954232bcda85b95e7765894e4f70d7da18cac370ee05906aa9daec03"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "olderVersionIsRefused",
+      "description": "Version 2 after the floor 3: replaying a file from before a revocation",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {
+          "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c": 3
+        },
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 2,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "889541a351b6235a9fd3cf519ac5f9a1a48737d72eea8770c02df3b855ec06e20251df68bae6aa08c37b9665ed3745bfe626ee78147fb7a3f366d1c2567e8e07"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_OLDER"
+      }
+    },
+    {
+      "name": "sameVersionSameSignatureIsOlder",
+      "description": "The stored profile imported again is not newer",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {
+          "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c": 3
+        },
+        "storedSignature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08",
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_OLDER"
+      }
+    },
+    {
+      "name": "sameVersionDifferentSignatureIsAConflict",
+      "description": "Same version, other bytes (other members): the administrator must sign a new version",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {
+          "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c": 3
+        },
+        "storedSignature": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "ca07d580f15fa5cd2b6fffa948cf713ff2b97fde204cc28951811e7163b9580af2f8a2032418b5a92466b5d23cabb349324f00552fa2b3f292261339ffdbf208"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_CONFLICT"
+      }
+    },
+    {
+      "name": "versionFloorSurvivesLeavingTheNetwork",
+      "description": "The client left the network (no current administrator) but keeps the floor 5",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": null,
+        "floor": {
+          "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c": 5
+        },
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 4,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "3fb4dba191ebe87a63c3eb93af586556ccf071b10670065f8b4ed83419112fc5b81494bd954232bcda85b95e7765894e4f70d7da18cac370ee05906aa9daec03"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_OLDER"
+      }
+    },
+    {
+      "name": "expiredProfileIsRefused",
+      "description": "expiresAt one millisecond in the past, no clock-skew allowance",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-21T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-11-24T11:59:59.999Z",
+        "signature": "614f5b77e1e9f18920d46e94f3d251fcf351c6accab4d42d831bb8c7439b77402d225ec1adab0932ec190236cfdc2184e4bbe8059c6b08d9a15442fb28813c0c"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_EXPIRED"
+      }
+    },
+    {
+      "name": "expiryExactlyNowIsRefused",
+      "description": "expiresAt equal to now is not in the future",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-21T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-11-24T12:00:00.000Z",
+        "signature": "3ea9aea7c55f4b148aa4dd6c96110fde8cdf142a9798a6d10e0b01a5639c359ed63ce59733a5f59a574862ef4fd25d4a493d5719c068b86c9c4361ccd9061204"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_EXPIRED"
+      }
+    },
+    {
+      "name": "issuedMoreThan24HoursAheadIsRefused",
+      "description": "issuedAt 24 hours and one millisecond in the future",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-25T12:00:00.001Z",
+        "version": 3,
+        "expiresAt": "2026-12-24T12:00:00.000Z",
+        "signature": "6007179d053f6f0b080d3cc211a2a9bfcbdf149d8773a83e266853b847dcf7570102906193ce7a8f871f6646a68d73a1d05b91feb45606dd810af71f43d98d02"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_BAD_DATE"
+      }
+    },
+    {
+      "name": "issuedExactly24HoursAheadIsAccepted",
+      "description": "issuedAt exactly 24 hours in the future",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-25T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-24T12:00:00.000Z",
+        "signature": "36e4bf2f52f36fdea99651a2805b72b206a28fac6b06b16ca1532e5a8da9e9681e5a8c6ffb3c7411c6bc417c00154203694386b78fdf0e47a6d294c4331bad03"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "changedFieldBreaksTheSignature",
+      "description": "A member added after signing",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          },
+          {
+            "publicKey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "name": null,
+            "revoked": false
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_BAD_SIGNATURE"
+      }
+    },
+    {
+      "name": "extendedExpiryBreaksTheSignature",
+      "description": "expiresAt moved one day later after signing",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-24T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_BAD_SIGNATURE"
+      }
+    },
+    {
+      "name": "unsignedProfileIsRefused",
+      "description": "No signature",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_UNSIGNED"
+      }
+    },
+    {
+      "name": "versionZeroIsRefused",
+      "description": "version must be at least 1",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 0,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "5e9d397d98d2a69facaddbd653ee5893172bb894ab821df2dc814692bf9b4932dcf28cc17cf2232c884cfba61ec776108e7f504138c1bb9a9ec98f325fc26a08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_UNSIGNED"
+      }
+    },
+    {
+      "name": "validityOverThreeHundredSixtySixDaysIsRefused",
+      "description": "expiresAt 367 days after issuedAt",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2027-11-25T12:00:00.000Z",
+        "signature": "cf80970ecd1a29106013a0dae01bbbaece57fd90d9e528ba9afd1142b513cad61b9ce1401ef5c56f8b56d369856ce09e970454da2c5b5044f3188b0ff53dc80c"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_BAD_DATE"
+      }
+    },
+    {
+      "name": "validityOfThreeHundredSixtySixDaysIsAccepted",
+      "description": "expiresAt exactly 366 days after issuedAt",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2027-11-24T12:00:00.000Z",
+        "signature": "b572d871732686cf9704c0d7dd1b7233e1a9e3a3086769aefd592b37d8debc9974f8b9b8478577fd64046e57b6244f698edbaeabbd33cc7843f430714e85af08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "expiryBeforeIssueIsRefused",
+      "description": "expiresAt earlier than issuedAt",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-11-22T12:00:00.000Z",
+        "signature": "4df806bebd07968afa182deba00d7108fe5e9343ade8defbb4b88acd05a7689bbb3f045e073641b87e07da2b8cb49542eb981c7f467541455c77018ac0c5af06"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_BAD_DATE"
+      }
+    },
+    {
+      "name": "fileAboveOneMebibyteIsRefused",
+      "description": "A file of 1 MiB + 1 byte",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 1048577
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_TOO_LARGE"
+      }
+    },
+    {
+      "name": "fileOfOneMebibyteIsAccepted",
+      "description": "A file of exactly 1 MiB",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 4,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "3fb4dba191ebe87a63c3eb93af586556ccf071b10670065f8b4ed83419112fc5b81494bd954232bcda85b95e7765894e4f70d7da18cac370ee05906aa9daec03"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 1048576
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "otherAdministratorWithoutSwitchIsRefused",
+      "description": "A file from another administrator than the current one",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "ca93ac1705187071d67b83c7ff0efe8108e8ec4530575d7726879333dbdabe7c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "dca607f8e654534c96555ad5845cc1913b8d2d4775ba8eb4cb20c9490d2edd1561264b0027660d64808584f896a57f16597d80e10fb5f79019579cf9e9ad810c"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": "ca93ac1705187071d67b83c7ff0efe8108e8ec4530575d7726879333dbdabe7c",
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_OTHER_ADMIN"
+      }
+    },
+    {
+      "name": "otherAdministratorWithExplicitSwitch",
+      "description": "The user explicitly chose to switch networks and confirmed the key",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "ca93ac1705187071d67b83c7ff0efe8108e8ec4530575d7726879333dbdabe7c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "dca607f8e654534c96555ad5845cc1913b8d2d4775ba8eb4cb20c9490d2edd1561264b0027660d64808584f896a57f16597d80e10fb5f79019579cf9e9ad810c"
+      },
+      "options": {
+        "replace": true,
+        "expectAdmin": "ca93ac1705187071d67b83c7ff0efe8108e8ec4530575d7726879333dbdabe7c",
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "handoverNamesTheNewAdministrator",
+      "description": "A valid unexpired handover from the current administrator names the signer: no confirmation needed",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": {
+          "from": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+          "to": "6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1",
+          "expiresAt": "2026-12-04T12:00:00.000Z"
+        },
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "2e0b6d084edce4201340b9ddadc2fffabb47d8e4d6bd6361e16479309c7c80608bd8c9c7ba1f0bdd26113962a3def1ee23d5ab761745ca44f7aac080f4ec0a0c"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "expiredHandoverDoesNotCount",
+      "description": "The handover has expired",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": {
+          "from": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+          "to": "6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1",
+          "expiresAt": "2026-11-24T11:59:59.999Z"
+        },
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "2e0b6d084edce4201340b9ddadc2fffabb47d8e4d6bd6361e16479309c7c80608bd8c9c7ba1f0bdd26113962a3def1ee23d5ab761745ca44f7aac080f4ec0a0c"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_OTHER_ADMIN"
+      }
+    },
+    {
+      "name": "handoverToAnotherKeyDoesNotCount",
+      "description": "The handover names a different new administrator than the signer",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": {
+          "from": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+          "to": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+          "expiresAt": "2026-12-04T12:00:00.000Z"
+        },
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "2e0b6d084edce4201340b9ddadc2fffabb47d8e4d6bd6361e16479309c7c80608bd8c9c7ba1f0bdd26113962a3def1ee23d5ab761745ca44f7aac080f4ec0a0c"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_OTHER_ADMIN"
+      }
+    },
+    {
+      "name": "retiredAdministratorCannotSignAgain",
+      "description": "The old key was replaced by a handover",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "6e7a1cdd29b0b78fd13af4c5598feff4ef2a97166e3ca6f2e4fbfccd80505bf1",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": [
+          "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c"
+        ]
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 9,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "aaa9736b47b367bb351a0ed0b7d3e1f0aa1753d371eb3968f3e9fa5979ef6b0166066c0d7a765eca72981d10b64f1c172e2e9118bb9d1c2a44d51a091358be0f"
+      },
+      "options": {
+        "replace": true,
+        "expectAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_RETIRED_ADMIN"
+      }
+    },
+    {
+      "name": "expiredStoredProfileEndsWithNewerProfileFromTheSameAdministrator",
+      "description": "The stored profile expired (lockdown); a newer profile from the same administrator ends it without confirmation",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {
+          "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c": 3
+        },
+        "storedSignature": "aa",
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 4,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "3fb4dba191ebe87a63c3eb93af586556ccf071b10670065f8b4ed83419112fc5b81494bd954232bcda85b95e7765894e4f70d7da18cac370ee05906aa9daec03"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "networkFieldsAreSigned",
+      "description": "networkId, creator, nonce and creation time are part of the signed bytes",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 4,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "networkCreator": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "networkNonce": "0707070707070707070707070707070707070707070707070707070707070707",
+        "networkCreatedAtMs": 1793491200000,
+        "networkId": "fcd823afe434032ef2534fce412eb7c85395562b370dc96dce9fc8f46a3392a9efa63c74c922c7255c002161ed9dc9f0",
+        "signature": "b16c70d0881c0171b01cc5ea426691c62f1fe4ba6165d4bb2d67d8be81cac26985ef0e5499a5bd3ce974364056b5f1c87ac9f3408d12a156efceceb8b643f40d"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "decision": "accepted"
+      }
+    },
+    {
+      "name": "changedNetworkIdBreaksTheSignature",
+      "description": "networkId replaced after signing",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 4,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "networkCreator": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "networkNonce": "0707070707070707070707070707070707070707070707070707070707070707",
+        "networkCreatedAtMs": 1793491200000,
+        "networkId": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "signature": "b16c70d0881c0171b01cc5ea426691c62f1fe4ba6165d4bb2d67d8be81cac26985ef0e5499a5bd3ce974364056b5f1c87ac9f3408d12a156efceceb8b643f40d"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_BAD_SIGNATURE"
+      }
+    }
+  ],
+  "state": [
+    {
+      "name": "validStoredProfileIsActive",
+      "profile": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "localPublicKey": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "nowMs": 1795521600000,
+      "expected": {
+        "mode": "active"
+      }
+    },
+    {
+      "name": "tamperedStoredProfileIsLockdown",
+      "profile": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          },
+          {
+            "publicKey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "name": null,
+            "revoked": false
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+      },
+      "localPublicKey": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "nowMs": 1795521600000,
+      "expected": {
+        "mode": "lockdown"
+      }
+    },
+    {
+      "name": "unsignedStoredProfileIsLockdown",
+      "profile": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z"
+      },
+      "localPublicKey": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "nowMs": 1795521600000,
+      "expected": {
+        "mode": "lockdown"
+      }
+    },
+    {
+      "name": "expiredStoredProfileIsLockdown",
+      "profile": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-10-15T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-11-23T12:00:00.000Z",
+        "signature": "523b72662a974783f0c01861694272114f0d161990e6c1396045dac2683a0234b2fb67ce7d992bd95ded3441f0fde8d88334943c4b3dc1f7ebc347a745436600"
+      },
+      "localPublicKey": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "nowMs": 1795521600000,
+      "expected": {
+        "mode": "lockdown"
+      }
+    },
+    {
+      "name": "storedProfileExpiringExactlyNowIsLockdown",
+      "profile": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-10-15T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-11-24T12:00:00.000Z",
+        "signature": "58fba5ee6c5b46c5964102bdc894d854e2ba080a6bfbad7365b5f2e2cf11263a942e0a75a41bf6106e58fa7bee4977f2252bbdcd3da25f841b26d6cae25d1d0b"
+      },
+      "localPublicKey": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "nowMs": 1795521600000,
+      "expected": {
+        "mode": "lockdown"
+      }
+    },
+    {
+      "name": "expiredProfileOnTheAdministratorDeviceStaysUsableToSign",
+      "profile": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-10-15T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-11-23T12:00:00.000Z",
+        "signature": "523b72662a974783f0c01861694272114f0d161990e6c1396045dac2683a0234b2fb67ce7d992bd95ded3441f0fde8d88334943c4b3dc1f7ebc347a745436600"
+      },
+      "localPublicKey": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+      "nowMs": 1795521600000,
+      "expected": {
+        "mode": "active"
+      }
+    },
+    {
+      "name": "unsignedProfileOnTheAdministratorDeviceIsAccepted",
+      "profile": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 3,
+        "expiresAt": "2026-12-23T12:00:00.000Z"
+      },
+      "localPublicKey": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+      "nowMs": 1795521600000,
+      "expected": {
+        "mode": "active"
+      }
+    }
+  ],
+  "activeProfile": {
+    "name": "Example Network",
+    "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+    "discoveryServers": [
+      "https://discovery.example.org"
+    ],
+    "relays": [
+      "relay.example.org:3478"
+    ],
+    "members": [
+      {
+        "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+        "name": "Alice",
+        "revoked": false
+      },
+      {
+        "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+        "name": null,
+        "revoked": true
+      }
+    ],
+    "privacyMode": "normal",
+    "issuedAt": "2026-11-23T12:00:00.000Z",
+    "version": 3,
+    "expiresAt": "2026-12-23T12:00:00.000Z",
+    "signature": "8a23a2e1a6c679f55d7cb60d2d7a0d5a02108a56c23db00f37f4f4f89ae1a275586170103bd2fcf5dec84ec907dbf3970882b67ff6d06c4442827d9915cb9e08"
+  },
+  "members": [
+    {
+      "name": "activeMemberMayConnect",
+      "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+      "allowed": true
+    },
+    {
+      "name": "revokedMemberIsRefused",
+      "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+      "allowed": false
+    },
+    {
+      "name": "unknownKeyIsRefused",
+      "publicKey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "allowed": false
+    },
+    {
+      "name": "upperCaseKeyIsTheSameKey",
+      "publicKey": "8139770EA87D175F56A35466C34C7ECCCB8D8A91B4EE37A25DF60F5B8FC9B394",
+      "allowed": true
+    },
+    {
+      "name": "administratorThatIsNoMemberIsRefused",
+      "publicKey": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+      "allowed": false
+    },
+    {
+      "name": "emptyKeyIsRefused",
+      "publicKey": "",
+      "allowed": false
+    }
+  ],
+  "hosts": [
+    {
+      "name": "listedDiscoveryServer",
+      "url": "https://discovery.example.org/api/v1/shares",
+      "allowed": true
+    },
+    {
+      "name": "listedRelayHostAndPort",
+      "url": "relay.example.org:3478",
+      "allowed": true
+    },
+    {
+      "name": "relayHostCoversHttpsToThatHost",
+      "url": "https://relay.example.org/health",
+      "allowed": true
+    },
+    {
+      "name": "otherHostIsRefused",
+      "url": "https://example.com/",
+      "allowed": false
+    },
+    {
+      "name": "subdomainOfAListedHostIsRefused",
+      "url": "https://evil.discovery.example.org/",
+      "allowed": false
+    },
+    {
+      "name": "listedHostAsSubstringIsRefused",
+      "url": "https://discovery.example.org.evil.test/",
+      "allowed": false
+    },
+    {
+      "name": "ipAddressIsRefused",
+      "url": "https://203.0.113.9/",
+      "allowed": false
+    },
+    {
+      "name": "unreadableAddressIsRefused",
+      "url": "https://[::1",
+      "allowed": false
+    }
+  ]
+}

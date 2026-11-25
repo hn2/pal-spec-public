@@ -1,0 +1,32 @@
+{
+  "description": "PAL/3 Draft 0.6.18 first-contact pair rendezvous key and mailbox locations (pal-spec#49, pal-core#363). Ed25519 key pairs come from crypto_sign_seed_keypair with 32 repeated seed bytes. Locations are derivePairMailboxLocationKey(full, recipient = B's Ed25519 public key, unixTimeMs, epochOffset) with 900-second epochs.",
+  "identities": {
+    "A": {
+      "seedByte": "a1",
+      "edPublicKey": "bc7cbcb5636375fa1d82434d466724d92377f53b980695dd49d26d0ce12205a5",
+      "beaconKey": "67af261465b5b4f3d93d47e4620cf4932f3c29974555d74f83c4b7350b4d590c"
+    },
+    "B": {
+      "seedByte": "b2",
+      "edPublicKey": "55154f42065ea5a1bea05463826be2684eb92df92c100027aabaae57ca554207",
+      "beaconKey": "469fb5b1011d19538334f3c298068be1e902001c62d5b984e95edaf25e60eb6f"
+    }
+  },
+  "pairKey": {
+    "base": "de2f0a8d251b6494970ce3e4b53340d7d362d439d9b6649cb195b610383009e3",
+    "full": "c16ecab1205306cb5630e45b3f967ccf0e8734d25062dff9ab8ed15156fbdad8"
+  },
+  "mailboxLocationsToB": {
+    "unixTimeMs": 1760000000000,
+    "epochOffsets": [
+      -1,
+      0,
+      1
+    ],
+    "locations": [
+      "61d61397fb756b1d168e896873f51c87ee3eb58e493be5ca36f32ed6170d7b913018186e242d903b88be251c07925119",
+      "190668cae5e37ccbdc286babfdf09c5881f37cd51aa773d53df7105a12a331fd4940054d926c42025f3e1064cd1fabf2",
+      "7cf3d867c1a9bc9ba14e92c4d96aa357806ff5d1cd5fc1204f408ad6503d0414c747b4c05dc5dd66669f4fbe8226d07a"
+    ]
+  }
+}

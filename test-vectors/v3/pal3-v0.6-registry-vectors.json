@@ -1,0 +1,257 @@
+{
+  "specVersion": "0.6.20",
+  "section": "A.6",
+  "description": "Protocol version and suite registry: the HELLO version_list and suite_list decision (the single E_PAL3_DOWNGRADE of 12.5 item 4), capability token encoding and intersection, and the registration rules of cipher suites.",
+  "generatedBy": "bin/generate-v0.6-registry-vectors.mjs",
+  "wireProtocolVersion": 3,
+  "registry": {
+    "suite1": {
+      "id": 1,
+      "kem": "X25519+ML-KEM-768",
+      "signature": "Ed25519+ML-DSA-65",
+      "aead": "ChaCha20-Poly1305-IETF",
+      "hash": "SHA-384"
+    },
+    "reservedIds": [
+      0
+    ],
+    "unregisteredIds": [
+      2,
+      3
+    ]
+  },
+  "selection": [
+    {
+      "name": "versionThreeSuiteOne",
+      "description": "The one registered version and suite",
+      "versionListHex": "0003",
+      "suiteListHex": "0001",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "selectedVersion": 3,
+        "selectedSuite": 1
+      }
+    },
+    {
+      "name": "versionListOffersAnOldAndTheCurrentVersion",
+      "description": "A future-proof initiator offers 0x0002 and 0x0003",
+      "versionListHex": "00020003",
+      "suiteListHex": "0001",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "selectedVersion": 3,
+        "selectedSuite": 1
+      }
+    },
+    {
+      "name": "suiteListPrefersAnUnregisteredSuite",
+      "description": "Preference order: the unregistered 0x0003 is skipped, the first registered suite is taken",
+      "versionListHex": "0003",
+      "suiteListHex": "00030001",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "selectedVersion": 3,
+        "selectedSuite": 1
+      }
+    },
+    {
+      "name": "suiteListWithOnlyUnregisteredSuites",
+      "description": "No offered suite is registered: abort with the one code of 12.5 item 4",
+      "versionListHex": "0003",
+      "suiteListHex": "00020003",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "error": "E_PAL3_DOWNGRADE"
+      }
+    },
+    {
+      "name": "reservedSuiteZero",
+      "description": "Suite 0x0000 is reserved and never selected",
+      "versionListHex": "0003",
+      "suiteListHex": "0000",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "error": "E_PAL3_DOWNGRADE"
+      }
+    },
+    {
+      "name": "versionListWithoutThree",
+      "description": "No supported version",
+      "versionListHex": "0002",
+      "suiteListHex": "0001",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "error": "E_PAL3_DOWNGRADE"
+      }
+    },
+    {
+      "name": "responderAcceptsOnlySuiteOne",
+      "description": "The responder configuration narrows the choice to suite 0x0001",
+      "versionListHex": "0003",
+      "suiteListHex": "0001",
+      "responderSuites": [
+        1
+      ],
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "selectedVersion": 3,
+        "selectedSuite": 1
+      }
+    },
+    {
+      "name": "versionListOddLength",
+      "description": "version_list of 3 bytes is malformed",
+      "versionListHex": "000300",
+      "suiteListHex": "0001",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "error": "E_PAL3_HANDSHAKE_INVALID"
+      }
+    },
+    {
+      "name": "suiteListEmpty",
+      "description": "An empty suite_list is malformed",
+      "versionListHex": "0003",
+      "suiteListHex": "",
+      "responderSuites": null,
+      "registeredSuites": [
+        1
+      ],
+      "expected": {
+        "error": "E_PAL3_HANDSHAKE_INVALID"
+      }
+    }
+  ],
+  "capabilityEncoding": [
+    {
+      "name": "sortedAndUniqueOnTheWire",
+      "description": "Tokens are sorted bytewise and de-duplicated before they are sent",
+      "input": [
+        "stream.v1",
+        "core.v1",
+        "grants.v1",
+        "core.v1"
+      ],
+      "capabilitiesHex": "636f72652e76312c6772616e74732e76312c73747265616d2e7631",
+      "capabilitiesAscii": "core.v1,grants.v1,stream.v1"
+    },
+    {
+      "name": "defaultSetOfTheReference",
+      "description": "The set a reference initiator advertises by default",
+      "input": null,
+      "capabilitiesHex": "63322d6369642d76322c63322d6b65792d7570646174652c636f72652e76312c6772616e74732e76312c7061642e76312c73747265616d2e7631",
+      "capabilitiesAscii": "c2-cid-v2,c2-key-update,core.v1,grants.v1,pad.v1,stream.v1"
+    },
+    {
+      "name": "optionalBulkPlaintextToken",
+      "description": "The optional c2-bulk-plaintext-record token sorts among the others",
+      "input": [
+        "c2-key-update",
+        "core.v1",
+        "c2-bulk-plaintext-record",
+        "swarm.v1"
+      ],
+      "capabilitiesHex": "63322d62756c6b2d706c61696e746578742d7265636f72642c63322d6b65792d7570646174652c636f72652e76312c737761726d2e7631",
+      "capabilitiesAscii": "c2-bulk-plaintext-record,c2-key-update,core.v1,swarm.v1"
+    }
+  ],
+  "capabilityIntersection": [
+    {
+      "local": [
+        "core.v1",
+        "stream.v1",
+        "grants.v1",
+        "c2-key-update",
+        "pad.v1"
+      ],
+      "remote": [
+        "core.v1",
+        "stream.v1",
+        "swarm.v1",
+        "pad.v1"
+      ],
+      "expected": [
+        "core.v1",
+        "pad.v1",
+        "stream.v1"
+      ]
+    },
+    {
+      "local": [
+        "core.v1",
+        "c2-bulk-plaintext-record"
+      ],
+      "remote": [
+        "core.v1",
+        "c2-key-update"
+      ],
+      "expected": [
+        "core.v1"
+      ]
+    },
+    {
+      "local": [
+        "core.v1"
+      ],
+      "remote": [],
+      "expected": []
+    }
+  ],
+  "registrationRejected": [
+    {
+      "name": "suiteZero",
+      "suiteId": 0,
+      "isPostQuantumHybrid": true,
+      "kemName": "X25519+ML-KEM-768",
+      "sigName": "Ed25519+ML-DSA-65",
+      "expectedError": "E_PAL3_SUITE_INVALID"
+    },
+    {
+      "name": "classicalOnlySuite",
+      "suiteId": 256,
+      "isPostQuantumHybrid": false,
+      "kemName": "X25519",
+      "sigName": "Ed25519",
+      "expectedError": "E_PAL3_SUITE_REJECTED"
+    },
+    {
+      "name": "hybridKemWithClassicalSignature",
+      "suiteId": 257,
+      "isPostQuantumHybrid": true,
+      "kemName": "X25519+ML-KEM-768",
+      "sigName": "Ed25519",
+      "expectedError": "E_PAL3_SUITE_REJECTED"
+    },
+    {
+      "name": "suiteOneAgain",
+      "suiteId": 1,
+      "isPostQuantumHybrid": true,
+      "kemName": "X25519+ML-KEM-768",
+      "sigName": "Ed25519+ML-DSA-65",
+      "expectedError": "E_PAL3_SUITE_INVALID"
+    }
+  ]
+}

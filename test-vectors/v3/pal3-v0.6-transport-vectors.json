@@ -1,11 +1,11 @@
 {
   "specVersion": "3.0.0-draft.6.10",
-  "description": "Chat mailbox location key (section 14.6): SHA-256 of the UTF-8 string palexplorer-mailbox-v1, a line feed, the recipient public key as 64 lowercase hexadecimal characters, a line feed and the day index in decimal digits.",
+  "description": "Chat mailbox location key (section 14.6): SHA-384 of the UTF-8 string palexplorer-mailbox-v1, a line feed, the recipient public key as 64 lowercase hexadecimal characters, a line feed and the day index in decimal digits.",
   "mailboxLocationKey": {
     "recipientPublicKey": "abababababababababababababababababababababababababababababababab",
     "unixSeconds": 1794744000,
     "dayIndex": 20772,
     "inputUtf8": "palexplorer-mailbox-v1\nabababababababababababababababababababababababababababababababab\n20772",
-    "locationKeyHex": "c9744d6927061d64a7a910442bc1e1a5a265580776deacf97ec8a040560168c8"
+    "locationKeyHex": "b9ff47eaa7c505130ea28d99e0117afd9d184c0d0cfed8f798bc56b6c8173352e95159c1d9b1b1ac7c05c1a83f80d4f1"
   }
 }
