@@ -129,6 +129,58 @@ const quota = meterSteps.map(([dt, bytes]) => {
   return { atMs: dt, bytes, expected: r.error ? { error: r.error } : { forwarded: r.value } };
 });
 
+// N4 pacing and N5 port bound (hn2/pal-core#457), and the PAL-DHT rule for its own external address (N3, stricter quorum).
+const punchPacing = [5, 19, 20, 21, 100, 0, -5, Number.NaN, undefined].map((requested) => {
+  const effectiveMs = mp.punchIntervalMs(requested);
+  return { requestedMs: Number.isNaN(requested) ? 'NaN' : (requested ?? null), effectiveMs, probesPerSecondAtMost: 1000 / effectiveMs };
+});
+const portPrediction = [
+  ['sequentialStride', 'Two observed ports 4 apart', [41000, 41004], 16],
+  ['defaultBound', 'No maxPorts: the default is the bound', [41000, 41004], undefined],
+  ['askingForTheBound', 'maxPorts 64', [41000, 41004], 64],
+  ['askingForMoreThanTheBound', 'maxPorts 256 is lowered to 64', [41000, 41004], 256],
+  ['askingForAThousand', 'maxPorts 1000 is lowered to 64', [41000], 1000],
+  ['noObservationsUsesTheBasePort', 'No observation: probing starts at the base port', [], 32],
+  ['observedBelow1024IsIgnored', 'Ports below 1024 are never probed', [80, 443], 64],
+  ['nearTheTopOfTheRange', 'Ports above 65535 are never probed', [65500, 65510], 64],
+].map(([name, description, ports, maxPorts]) => {
+  const out = mp.predictSymmetricNatPorts({ observations: ports.map((externalPort) => ({ externalPort })), ...(maxPorts === undefined ? {} : { maxPorts }) });
+  return { name, description, observedPorts: ports, maxPorts: maxPorts ?? null, ports: out };
+});
+
+const { Pal3Dht } = await ref.lib('pal3/dht.js');
+const MIN = 60 * 1000;
+const rep = (n) => `${20 + n}.0.0.1`;
+const X = '203.0.113.7';
+const dhtScenarios = [
+  ['threeDistinctPrefixesAgree', 'Three reporters in three different /16 prefixes report the same address', [[0, X, rep(1)], [1000, X, rep(2)], [2000, X, rep(3)]]],
+  ['twoPrefixesAreNotEnough', 'Two prefixes agree', [[0, X, rep(1)], [1000, X, rep(2)]]],
+  ['oneReporterPerPrefix', 'Three reporters in one /16 count as one prefix', [[0, X, '11.1.0.1'], [1000, X, '11.1.0.2'], [2000, X, '11.1.200.3']]],
+  ['neighbouringSlash16AreDistinct', 'Reporters in 11.1.x.x, 11.2.x.x and 11.3.x.x are three prefixes', [[0, X, '11.1.0.1'], [1000, X, '11.2.0.1'], [2000, X, '11.3.0.1']]],
+  ['reportersDisagree', 'Three prefixes report three different addresses', [[0, X, rep(1)], [1000, '203.0.113.8', rep(2)], [2000, '203.0.113.9', rep(3)]]],
+  ['areporterThatChangesItsMindCountsOnce', 'One reporter reports another address later: its first report is replaced, so the quorum is reached only by its second report', [[0, X, rep(1)], [1000, '203.0.113.8', rep(1)], [2000, X, rep(2)], [3000, X, rep(3)], [4000, X, rep(1)]]],
+  ['anObservationExpiresAfterThirtyMinutes', 'The first report is 31 minutes old when the third arrives', [[0, X, rep(1)], [10 * MIN, X, rep(2)], [31 * MIN, X, rep(3)]]],
+  ['anObservationOneMillisecondBeforeExpiry', 'The third report arrives 1 ms before the first expires', [[0, X, rep(1)], [1000, X, rep(2)], [30 * MIN - 1, X, rep(3)]]],
+  ['anObservationAtExpiry', 'The third report arrives exactly 30 minutes after the first: the first is gone', [[0, X, rep(1)], [1000, X, rep(2)], [30 * MIN, X, rep(3)]]],
+  ['tableOfSixtyFourDropsTheOldest', '64 other prefixes report other addresses after the first report: the table (64 entries) drops the oldest entries, so two later reports are not a quorum',
+    [[0, X, rep(1)], ...Array.from({ length: 64 }, (_, i) => [1000 + i, `198.51.100.${i + 1}`, rep(2 + i)]), [5000, X, rep(70)], [5001, X, rep(71)]]],
+  ['ipv6Slash48Prefixes', 'IPv6 reporters count per /48', [[0, '2606:4700:4700::1111', '2a00:1450:1::1'], [1000, '2606:4700:4700::1111', '2a00:1450:2::1'], [2000, '2606:4700:4700::1111', '2a00:1450:3::1']]],
+  ['ipv6OneSlash48IsOnePrefix', 'Three IPv6 reporters in one /48', [[0, '2606:4700:4700::1111', '2a00:1450:1:1::1'], [1000, '2606:4700:4700::1111', '2a00:1450:1:2::1'], [2000, '2606:4700:4700::1111', '2a00:1450:1:3::1']]],
+  ['privateAddressFromAPrivateReporter', 'A non-global address reported by a non-global reporter needs no quorum (private network)', [[0, '192.168.1.5', '192.168.1.1']]],
+  ['privateAddressFromAGlobalReporter', 'A non-global address reported by a global reporter needs the quorum', [[0, '192.168.1.5', rep(1)]]],
+  ['globalAddressFromAPrivateReporter', 'A global address reported by a non-global reporter needs the quorum', [[0, X, '192.168.1.1']]],
+  ['laterReportsDoNotChangeTheAddress', 'After the address is confirmed, three prefixes that report another address change nothing', [[0, X, rep(1)], [1000, X, rep(2)], [2000, X, rep(3)], [3000, '203.0.113.99', rep(4)], [4000, '203.0.113.99', rep(5)], [5000, '203.0.113.99', rep(6)]]],
+].map(([name, description, steps]) => {
+  const clock = { t: 0 };
+  const dht = new Pal3Dht({ send: () => {}, now: () => clock.t });
+  const results = steps.map(([atMs, reportedIp, reporterIp]) => {
+    clock.t = atMs;
+    dht._observeSelf(reportedIp, reporterIp);
+    return { atMs, reportedIp, reporterIp, readOnly: dht.readOnly, externalIp: dht.externalIp };
+  });
+  return { name, description, steps: results };
+});
+
 const doc = {
   specVersion: '0.6.22',
   section: '4.1',
@@ -136,6 +188,10 @@ const doc = {
   generatedBy: 'bin/generate-v0.6-nat-traversal-vectors.mjs',
   limits: { observerTtlMs: 600000, maxObservers: 64, punchMarginMs: 50, rttClampMs: 2000, clockSkewMs: 300000, reservationDefaults: { durationMs: 900000, maxBytes: 268435456, maxBandwidthBps: 2097152 } },
   addresses,
+  punchPacing,
+  portPrediction,
+  dhtLimits: { quorumPrefixes: 3, ttlMs: 30 * MIN, maxEntries: 64, prefixBitsIpv4: 16, prefixBitsIpv6: 48, maxPorts: 64, minPunchIntervalMs: 20 },
+  dhtExternalAddress: dhtScenarios,
   observations,
   punchPlans: punch,
   punchWithoutRtt,
@@ -147,4 +203,4 @@ const doc = {
   },
 };
 writeFileSync(out, `${JSON.stringify(doc, null, 2)}\n`);
-console.log(`wrote ${out}: ${addresses.length} addresses, ${observations.length} observation scenarios, ${punch.length} punch plans, ${reservationCases.length} reservation cases`);
+console.log(`wrote ${out}: ${addresses.length} addresses, ${observations.length} observation scenarios, ${punch.length} punch plans, ${reservationCases.length} reservation cases, ${punchPacing.length} pacing, ${portPrediction.length} port prediction, ${dhtScenarios.length} DHT scenarios`);

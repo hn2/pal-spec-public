@@ -146,16 +146,115 @@ const reassembly = [
     { atMs: 201, source: 's128', group: 'g128', packetHex: hdr(0x6000 + 128, 1, 2, frame(5, 128)) }]),
 ];
 
+// --- item 4: peer credit is clamped to 16 MiB; block ranges are validated -------------------------------------------------
+// A real responder serves a read; the requester is simulated with its record protector. Only decisions are recorded (how many
+// bytes of DATA the responder sent, which error it answered), no byte of a session reaches the file.
+const hsLib = await lib('pal3/handshake.js');
+const { Pal3SessionMux } = await lib('pal3/operations.js');
+const { RECORD_TYPE, CHANNEL_ID, MAX_DATA_PAYLOAD } = await lib('pal3/records.js');
+const { Pal3MerkleTree } = await lib('pal3/merkle.js');
+const { encodeValue, decodeValue } = await lib('pal3/tlv.js');
+const MiB = 1024 * 1024;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const bigFile = Buffer.alloc(40 * MiB, 0x5a);
+const smallFile = Buffer.alloc(3 * 262144 - 100, 0x33);
+const trees = new Map([[0, Pal3MerkleTree.fromBuffer(bigFile)], [1, Pal3MerkleTree.fromBuffer(smallFile)]]);
+const files = [bigFile, smallFile];
+function serverSession() {
+  const idI = hsLib.generateHybridSigningIdentity({ edSeed: Buffer.alloc(32, 0x51), dsaSeed: Buffer.alloc(32, 0x52) });
+  const idR = hsLib.generateHybridSigningIdentity({ edSeed: Buffer.alloc(32, 0x53), dsaSeed: Buffer.alloc(32, 0x54) });
+  const init = new hsLib.HandshakeInitiator({ deviceCert: hsLib.issueDeviceCertificate({ identity: idI }), deviceKeys: idI });
+  const resp = hsLib.processHelloAndCreateAccept(init.createHelloRecord(), { deviceCert: hsLib.issueDeviceCertificate({ identity: idR }), deviceKeys: idR });
+  const fin = init.processAcceptAndCreateFinish(resp.acceptRecord);
+  const done = resp.verifyFinish(fin.finishRecord);
+  hsLib.verifyReadyRecord(fin.ctlProtector, done.readyRecord);
+  const held = [];
+  const client = new Pal3SessionMux({
+    isInitiator: true, prk: fin.prk, exporterSecret: fin.exporterSecret, ctlProtector: fin.ctlProtector, peerCert: fin.peerCert,
+    negotiatedCapabilities: fin.negotiatedCapabilities, pathKind: 'direct_udp', carrier: 'c2', autoRekey: false, sendWireRecord: async () => {},
+  });
+  const server = new Pal3SessionMux({
+    isInitiator: false, prk: done.prk, exporterSecret: done.exporterSecret, ctlProtector: done.ctlProtector, peerCert: done.peerCert,
+    negotiatedCapabilities: done.negotiatedCapabilities, pathKind: 'direct_udp', carrier: 'c2', allowUnauthenticated: true, autoRekey: false,
+    getContentTree: async (contentId) => { const i = Number(contentId.slice(0, 1)); return { tree: trees.get(i), readBlock: (b) => files[i].subarray(b * 262144, (b + 1) * 262144) }; },
+    sendWireRecord: async (ch, wire) => { held.push({ ch, wire: Buffer.from(wire) }); },
+  });
+  const settle = async () => { let n = -1; while (n !== held.length) { n = held.length; await sleep(60); } };
+  const seen = { dataBytes: 0, ended: false, error: null };
+  const drain = () => {
+    for (const r of held.splice(0)) {
+      const frame = client.channels.get(r.ch).open(r.wire);
+      if (frame.type === RECORD_TYPE.DATA) seen.dataBytes += frame.payload.length;
+      else if (frame.type === RECORD_TYPE.END) seen.ended = true;
+      else if (frame.type === RECORD_TYPE.ERROR) seen.error = decodeValue(frame.payload);
+    }
+  };
+  const send = async (type, streamId, obj) => {
+    const wire = client.channels.get(CHANNEL_ID.BULK_0).seal({ type, streamId, payload: encodeValue(obj) });
+    server.receiveWireRecord(CHANNEL_ID.BULK_0, wire).catch(() => {});
+    await sleep(20);
+  };
+  return { settle, drain, seen, send };
+}
+const read = (fileIndex, startBlock, endBlock, credit) => ({ op: 'file.read', res: `root:${fileIndex}x`, body: { contentId: `${fileIndex}x`, startBlock, endBlock }, credit });
+
+const creditScenarios = [
+  ['oneMebibyte', 'The requester grants 1 MiB: the responder stops after 1 MiB', 1 * MiB, []],
+  ['sixteenMebibytes', 'A grant of exactly 16 MiB', 16 * MiB, []],
+  ['sixtyFourMebibytesIsClampedToSixteen', 'A grant of 64 MiB is clamped to 16 MiB', 64 * MiB, []],
+  ['noCreditSendsNothing', 'A grant of 0: nothing is sent until CREDIT arrives', 0, []],
+  ['negativeCreditIsZero', 'A negative grant is clamped to 0', -5, []],
+  ['creditMessagesAddCredit', 'A grant of 1 MiB, then CREDIT of 1 MiB and of 2 MiB', 1 * MiB, [1 * MiB, 2 * MiB]],
+  ['aCreditMessageIsClampedToSixteen', 'A grant of 0, then CREDIT of 1 GiB: at most 16 MiB are sent', 0, [1024 * MiB]],
+  ['creditBelowOneBlock', 'A grant of 100000 bytes is less than one 256 KiB block: a block is sent whole, so nothing is sent', 100000, []],
+  ['creditOfOneAndAHalfBlocks', 'A grant of 393216 bytes: one whole block is sent', 393216, []],
+  ['creditBelowOneBlockThenTopUp', 'A grant of 100000 bytes, then CREDIT of 162144 bytes: together exactly one block', 100000, [162144]],
+];
+const credit = [];
+for (const [name, description, requestCredit, grants] of creditScenarios) {
+  const S = serverSession();
+  await S.send(RECORD_TYPE.REQ, 1, read(0, 0, 159, requestCredit));
+  await S.settle(); S.drain();
+  const sentAfter = [S.seen.dataBytes];
+  for (const g of grants) {
+    await S.send(RECORD_TYPE.CREDIT, 1, { credit: g });
+    await S.settle(); S.drain();
+    sentAfter.push(S.seen.dataBytes);
+  }
+  credit.push({ name, description, fileBytes: bigFile.length, requestCredit, creditMessages: grants, sentBytesAfterEachStep: sentAfter });
+}
+const rangeCases = [
+  ['wholeFile', 'Blocks 0 to 2 of a 3-block file', 0, 2, 'accepted'],
+  ['lastBlockOnly', 'Block 2 only', 2, 2, 'accepted'],
+  ['endBeyondTheLastBlock', 'endBlock 3 in a 3-block file', 0, 3, 'E_PAL3_INVALID_RANGE'],
+  ['startBeyondTheLastBlock', 'startBlock 3', 3, 3, 'E_PAL3_INVALID_RANGE'],
+  ['endBeforeStart', 'endBlock 1 before startBlock 2', 2, 1, 'E_PAL3_INVALID_RANGE'],
+  ['negativeStart', 'startBlock -1', -1, 1, 'E_PAL3_INVALID_RANGE'],
+  ['fractionalStart', 'startBlock 0.5', 0.5, 1, 'E_PAL3_INVALID_RANGE'],
+  ['textStart', 'startBlock "0"', '0', 1, 'E_PAL3_INVALID_RANGE'],
+];
+const ranges = [];
+for (const [name, description, startBlock, endBlock, expectedDecision] of rangeCases) {
+  const S = serverSession();
+  await S.send(RECORD_TYPE.REQ, 1, read(1, startBlock, endBlock, 1 * MiB));
+  await S.settle(); S.drain();
+  const got = S.seen.error ? (/^(E_[A-Z0-9_]+)/.exec(String(S.seen.error.error ?? S.seen.error.message ?? ''))?.[1] ?? 'error') : (S.seen.ended ? 'accepted' : 'none');
+  if (got !== expectedDecision) throw new Error(`reference answered ${got}, not ${expectedDecision}: ${name}`);
+  ranges.push({ name, description, fileBytes: smallFile.length, blockCount: 3, startBlock, endBlock, expected: got === 'accepted' ? { decision: 'accepted', dataBytes: S.seen.dataBytes } : { error: got, dataBytes: S.seen.dataBytes } });
+}
+
 const doc = {
   specVersion: '0.6.22',
   section: '11.2',
   description: 'Hardening invariants that are decisions on bytes: pal:// URI validation (item 5), rejection of low-order X25519 public keys (item 1), the FIPS 203 modulus check of ML-KEM encapsulation keys (item 7) and datagram reassembly (item 3).',
   generatedBy: 'bin/generate-v0.6-hardening-vectors.mjs',
-  limits: { maxPayloadBytes: MAX, maxFragmentsPerMessage: 64, perSourceMessages: 16, globalMessages: 128, expiryMs: 5000 },
+  limits: { maxPeerCreditBytes: 16 * MiB, dataRecordBytes: MAX_DATA_PAYLOAD, blockBytes: 262144, maxPayloadBytes: MAX, maxFragmentsPerMessage: 64, perSourceMessages: 16, globalMessages: 128, expiryMs: 5000 },
   uri,
   x25519,
   mlkem,
   reassembly,
+  credit,
+  ranges,
 };
 writeFileSync(out, `${JSON.stringify(doc, null, 2)}\n`);
-console.log(`wrote ${out}: ${uri.length} uri, ${x25519.keys.length} x25519, ${kemCases.length} mlkem, ${reassembly.length} reassembly scenarios`);
+console.log(`wrote ${out}: ${uri.length} uri, ${x25519.keys.length} x25519, ${kemCases.length} mlkem, ${reassembly.length} reassembly scenarios, ${credit.length} credit, ${ranges.length} ranges`);

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   runRekeyValidation, runHeaderProtectionValidation, runSasValidation, runSealedHelloValidation, runGrantValidation, runExtensionSigningValidation, runStoredStateValidation,
-  runChunkOutboardValidation, runPrivateShareValidation, runDeviceRevocationValidation, runRegistryValidation, runPlaintextRecordValidation, runMultiSealValidation, runHardeningValidation, runLocalPolicyValidation, runPrivateNetworkAcceptValidation, runPexValidation, runNatTraversalValidation,
+  runChunkOutboardValidation, runPrivateShareValidation, runDeviceRevocationValidation, runRegistryValidation, runPlaintextRecordValidation, runMultiSealValidation, runHardeningValidation, runLocalPolicyValidation, runPrivateNetworkAcceptValidation, runPexValidation, runNatTraversalValidation, runTransportPolicyValidation, runEnrollmentBindingValidation,
 } from '../validate.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -56,7 +56,7 @@ test('extensionSigning_vectors_validateWithoutPalCore', () => {
 });
 
 const palCore = process.env.PAL_CORE_PATH;
-const generators = ['rekey', 'header-protection', 'sas', 'sealed-hello', 'grant', 'extension-signing', 'chunk-outboard', 'private-share', 'device-revocation', 'registry', 'plaintext-record', 'multi-seal', 'hardening', 'local-policy', 'pex', 'nat-traversal'];
+const generators = ['rekey', 'header-protection', 'sas', 'sealed-hello', 'grant', 'extension-signing', 'chunk-outboard', 'private-share', 'device-revocation', 'registry', 'plaintext-record', 'multi-seal', 'hardening', 'local-policy', 'pex', 'nat-traversal', 'transport-policy', 'enrollment-binding'];
 
 for (const name of generators) {
   test(`${name}_generator_twoRuns_areByteIdenticalAndMatchTheCommittedFile`, { skip: palCore ? false : 'set PAL_CORE_PATH to a hn2/pal-core checkout with dependencies installed' }, () => {
@@ -215,6 +215,93 @@ test('plaintextRecord_aDrainWindowThatNeverEnds_isRejectedByTheValidator', () =>
   assert.throws(() => runPlaintextRecordValidation(v), /directThenRelay/);
 });
 
+test('plaintextRecord_streamRule_validatesWithoutPalCore', () => {
+  assert.ok(runPlaintextRecordValidation().streamRule >= 12);
+});
+
+test('plaintextRecord_plaintextOnARequestStreamThatIsAccepted_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-plaintext-record-vectors.json');
+  v.streamRule.find((c) => c.name === 'plaintextOnARequestStream').expected = { outcome: 'delivered' };
+  assert.throws(() => runPlaintextRecordValidation(v), /plaintextOnARequestStream/);
+});
+
+test('plaintextRecord_trailingDataAfterTheDrainWindowThatIsDiscarded_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-plaintext-record-vectors.json');
+  v.streamRule.find((c) => c.name === 'trailingOnACancelledStreamAfterDrainWindow').expected = { outcome: 'discarded' };
+  assert.throws(() => runPlaintextRecordValidation(v), /trailingOnACancelledStreamAfterDrainWindow/);
+});
+
+test('deviceRevocation_operationsAndHandshakeVersion_validateWithoutPalCore', () => {
+  const r = runDeviceRevocationValidation();
+  assert.ok(r.operations >= 20 && r.handshake >= 6);
+});
+
+test('deviceRevocation_aPushByANonPalThatIsApplied_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-device-revocation-vectors.json');
+  v.operations.find((c) => c.name === 'pushByANonPal').expected = { ok: true, applied: true, version: '2' };
+  assert.throws(() => runDeviceRevocationValidation(v), /pushByANonPal/);
+});
+
+test('deviceRevocation_aLowerHandshakeVersionThatIsAccepted_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-device-revocation-vectors.json');
+  v.handshakeRevocationVersion.find((c) => c.name === 'responderBelowWhatInitiatorHolds').expected = { refusedBy: null, error: null };
+  assert.throws(() => runDeviceRevocationValidation(v), /responderBelowWhatInitiatorHolds/);
+});
+
+test('natTraversal_pacingPortsAndDhtAddress_validateWithoutPalCore', () => {
+  const r = runNatTraversalValidation();
+  assert.ok(r.dht >= 12 && r.pacing >= 6 && r.ports >= 6);
+});
+
+test('natTraversal_aProbeIntervalBelowTwentyMilliseconds_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-nat-traversal-vectors.json');
+  const c = v.punchPacing.find((x) => x.requestedMs === 5);
+  c.effectiveMs = 5; c.probesPerSecondAtMost = 200;
+  assert.throws(() => runNatTraversalValidation(v), /pacing of 5/);
+});
+
+test('natTraversal_moreThanSixtyFourProbePorts_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-nat-traversal-vectors.json');
+  const c = v.portPrediction.find((x) => x.name === 'askingForMoreThanTheBound');
+  c.ports = [...c.ports, 60000];
+  assert.throws(() => runNatTraversalValidation(v), /askingForMoreThanTheBound/);
+});
+
+test('natTraversal_aDhtAddressConfirmedByTwoPrefixes_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-nat-traversal-vectors.json');
+  const sc = v.dhtExternalAddress.find((x) => x.name === 'twoPrefixesAreNotEnough');
+  sc.steps[1].readOnly = false; sc.steps[1].externalIp = sc.steps[1].reportedIp;
+  assert.throws(() => runNatTraversalValidation(v), /twoPrefixesAreNotEnough/);
+});
+
+test('hardening_creditClampAndBlockRanges_validateWithoutPalCore', () => {
+  const r = runHardeningValidation();
+  assert.ok(r.credit >= 8 && r.ranges >= 6);
+});
+
+test('hardening_aCreditAboveSixteenMebibytesThatIsHonoured_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-hardening-vectors.json');
+  const c = v.credit.find((x) => x.name === 'sixtyFourMebibytesIsClampedToSixteen');
+  c.sentBytesAfterEachStep = [32 * 1024 * 1024];
+  assert.throws(() => runHardeningValidation(v), /sixtyFourMebibytesIsClampedToSixteen/);
+});
+
+test('hardening_anEndBlockBeyondTheFileThatIsAccepted_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-hardening-vectors.json');
+  v.ranges.find((x) => x.name === 'endBeyondTheLastBlock').expected = { decision: 'accepted', dataBytes: 786332 };
+  assert.throws(() => runHardeningValidation(v), /endBeyondTheLastBlock/);
+});
+
+test('privateNetworkAccept_behaviors_validateWithoutPalCore', () => {
+  assert.ok(runPrivateNetworkAcceptValidation().behaviors >= 5);
+});
+
+test('privateNetworkAccept_aPublicDhtThatIsAllowed_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-private-network-accept-vectors.json');
+  v.behaviors.find((b) => b.name === 'publicDhtIsRefused').expected = { decision: 'allowed' };
+  assert.throws(() => runPrivateNetworkAcceptValidation(v), /publicDhtIsRefused/);
+});
+
 test('multiSeal_vectors_validateWithoutPalCore', () => {
   const r = runMultiSealValidation();
   assert.ok(r.sealed >= 4 && r.lists >= 3 && r.signed >= 2 && r.negative >= 40);
@@ -319,6 +406,12 @@ test('localPolicy_aWildcardThatImpliesExec_isRejectedByTheValidator', () => {
   assert.throws(() => runLocalPolicyValidation(v), /wildcardNeverImpliesExec/);
 });
 
+test('localPolicy_aBareWildcardThatCoversOrdinary_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-local-policy-vectors.json');
+  v.permissions.find((x) => x.name === 'wildcardCoversOrdinary').allowed = true;
+  assert.throws(() => runLocalPolicyValidation(v), /wildcardCoversOrdinary/);
+});
+
 test('privateNetworkAccept_vectors_validateWithoutPalCore', () => {
   const r = runPrivateNetworkAcceptValidation();
   assert.ok(r.accept >= 25 && r.state >= 6 && r.members >= 5 && r.hosts >= 7);
@@ -419,4 +512,50 @@ test('natTraversal_aReservationThatSkipsTheSignatureCheck_isRejectedByTheValidat
   const v = vectors('pal3-v0.6-nat-traversal-vectors.json');
   v.relay.reservations.find((c) => c.name === 'mlDsaSignatureChanged').expected = { accepted: true };
   assert.throws(() => runNatTraversalValidation(v), /mlDsaSignatureChanged/);
+});
+
+test('transportPolicy_vectors_validateWithoutPalCore', () => {
+  const r = runTransportPolicyValidation();
+  assert.ok(r.path >= 12 && r.address >= 12 && r.records >= 16 && r.boundary >= 30);
+});
+
+test('transportPolicy_aRelayThatCarriesByDefault_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-transport-policy-vectors.json');
+  v.pathPolicy.find((x) => x.name === 'directBeatsEnabledRelay').expected.decision = 'relayed';
+  assert.throws(() => runTransportPolicyValidation(v), /directBeatsEnabledRelay/);
+});
+
+test('transportPolicy_anAddressInALog_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-transport-policy-vectors.json');
+  v.addressHandling.find((x) => x.name === 'writeToLog').allowed = true;
+  assert.throws(() => runTransportPolicyValidation(v), /writeToLog/);
+});
+
+test('transportPolicy_aRecordThatCarriesAHandle_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-transport-policy-vectors.json');
+  v.records.find((x) => x.name === 'discoveryRegistrationWithHandle').allowed = true;
+  assert.throws(() => runTransportPolicyValidation(v), /discoveryRegistrationWithHandle/);
+});
+
+test('transportPolicy_aLoopbackHttpListener_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-transport-policy-vectors.json');
+  v.localControl.find((x) => x.name === 'loopbackHttpListener').allowed = true;
+  assert.throws(() => runTransportPolicyValidation(v), /loopbackHttpListener/);
+});
+
+test('enrollmentBinding_vectors_validateWithoutPalCore', () => {
+  const r = runEnrollmentBindingValidation();
+  assert.ok(r.enrollment >= 6 && r.receiverForms >= 4 && r.callerBinding >= 4);
+});
+
+test('enrollmentBinding_aSelfCertifiedFormAcceptedAfterAStatement_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-enrollment-binding-vectors.json');
+  v.receiverForms.find((c) => c.name === 'selfCertifiedRefusedOnceAStatementIsHeld').expected = { accept: true };
+  assert.throws(() => runEnrollmentBindingValidation(v), /selfCertifiedRefusedOnceAStatementIsHeld/);
+});
+
+test('enrollmentBinding_aClaimForAnotherIdentity_isRejectedByTheValidator', () => {
+  const v = vectors('pal3-v0.6-enrollment-binding-vectors.json');
+  v.callerBinding.find((c) => c.name === 'claimForAnotherIdentityIsRefused').expected = { allowed: true };
+  assert.throws(() => runEnrollmentBindingValidation(v), /claimForAnotherIdentityIsRefused/);
 });

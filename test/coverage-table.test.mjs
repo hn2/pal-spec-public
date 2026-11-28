@@ -100,6 +100,6 @@ test('a case id whose value is a pending placeholder does not count as coverage'
 });
 
 test('a heading with MUST text that is added to the specification needs a row', () => {
-  const extra = `${spec}\n### 15.9 New rule\nA peer MUST do it.\n`;
-  assert.match(checkCoverage(extra, table).join('\n'), /section 15\.9 .* no row/);
+  const extra = `${spec}\n### 15.10 New rule\nA peer MUST do it.\n`;
+  assert.match(checkCoverage(extra, table).join('\n'), /section 15\.10 .* no row/);
 });

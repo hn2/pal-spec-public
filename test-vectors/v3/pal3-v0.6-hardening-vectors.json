@@ -4,6 +4,9 @@
   "description": "Hardening invariants that are decisions on bytes: pal:// URI validation (item 5), rejection of low-order X25519 public keys (item 1), the FIPS 203 modulus check of ML-KEM encapsulation keys (item 7) and datagram reassembly (item 3).",
   "generatedBy": "bin/generate-v0.6-hardening-vectors.mjs",
   "limits": {
+    "maxPeerCreditBytes": 16777216,
+    "dataRecordBytes": 65536,
+    "blockBytes": 262144,
     "maxPayloadBytes": 1200,
     "maxFragmentsPerMessage": 64,
     "perSourceMessages": 16,
@@ -1873,6 +1876,217 @@
           }
         }
       ]
+    }
+  ],
+  "credit": [
+    {
+      "name": "oneMebibyte",
+      "description": "The requester grants 1 MiB: the responder stops after 1 MiB",
+      "fileBytes": 41943040,
+      "requestCredit": 1048576,
+      "creditMessages": [],
+      "sentBytesAfterEachStep": [
+        1048576
+      ]
+    },
+    {
+      "name": "sixteenMebibytes",
+      "description": "A grant of exactly 16 MiB",
+      "fileBytes": 41943040,
+      "requestCredit": 16777216,
+      "creditMessages": [],
+      "sentBytesAfterEachStep": [
+        16777216
+      ]
+    },
+    {
+      "name": "sixtyFourMebibytesIsClampedToSixteen",
+      "description": "A grant of 64 MiB is clamped to 16 MiB",
+      "fileBytes": 41943040,
+      "requestCredit": 67108864,
+      "creditMessages": [],
+      "sentBytesAfterEachStep": [
+        16777216
+      ]
+    },
+    {
+      "name": "noCreditSendsNothing",
+      "description": "A grant of 0: nothing is sent until CREDIT arrives",
+      "fileBytes": 41943040,
+      "requestCredit": 0,
+      "creditMessages": [],
+      "sentBytesAfterEachStep": [
+        0
+      ]
+    },
+    {
+      "name": "negativeCreditIsZero",
+      "description": "A negative grant is clamped to 0",
+      "fileBytes": 41943040,
+      "requestCredit": -5,
+      "creditMessages": [],
+      "sentBytesAfterEachStep": [
+        0
+      ]
+    },
+    {
+      "name": "creditMessagesAddCredit",
+      "description": "A grant of 1 MiB, then CREDIT of 1 MiB and of 2 MiB",
+      "fileBytes": 41943040,
+      "requestCredit": 1048576,
+      "creditMessages": [
+        1048576,
+        2097152
+      ],
+      "sentBytesAfterEachStep": [
+        1048576,
+        2097152,
+        4194304
+      ]
+    },
+    {
+      "name": "aCreditMessageIsClampedToSixteen",
+      "description": "A grant of 0, then CREDIT of 1 GiB: at most 16 MiB are sent",
+      "fileBytes": 41943040,
+      "requestCredit": 0,
+      "creditMessages": [
+        1073741824
+      ],
+      "sentBytesAfterEachStep": [
+        0,
+        16777216
+      ]
+    },
+    {
+      "name": "creditBelowOneBlock",
+      "description": "A grant of 100000 bytes is less than one 256 KiB block: a block is sent whole, so nothing is sent",
+      "fileBytes": 41943040,
+      "requestCredit": 100000,
+      "creditMessages": [],
+      "sentBytesAfterEachStep": [
+        0
+      ]
+    },
+    {
+      "name": "creditOfOneAndAHalfBlocks",
+      "description": "A grant of 393216 bytes: one whole block is sent",
+      "fileBytes": 41943040,
+      "requestCredit": 393216,
+      "creditMessages": [],
+      "sentBytesAfterEachStep": [
+        262144
+      ]
+    },
+    {
+      "name": "creditBelowOneBlockThenTopUp",
+      "description": "A grant of 100000 bytes, then CREDIT of 162144 bytes: together exactly one block",
+      "fileBytes": 41943040,
+      "requestCredit": 100000,
+      "creditMessages": [
+        162144
+      ],
+      "sentBytesAfterEachStep": [
+        0,
+        262144
+      ]
+    }
+  ],
+  "ranges": [
+    {
+      "name": "wholeFile",
+      "description": "Blocks 0 to 2 of a 3-block file",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": 0,
+      "endBlock": 2,
+      "expected": {
+        "decision": "accepted",
+        "dataBytes": 786332
+      }
+    },
+    {
+      "name": "lastBlockOnly",
+      "description": "Block 2 only",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": 2,
+      "endBlock": 2,
+      "expected": {
+        "decision": "accepted",
+        "dataBytes": 262044
+      }
+    },
+    {
+      "name": "endBeyondTheLastBlock",
+      "description": "endBlock 3 in a 3-block file",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": 0,
+      "endBlock": 3,
+      "expected": {
+        "error": "E_PAL3_INVALID_RANGE",
+        "dataBytes": 0
+      }
+    },
+    {
+      "name": "startBeyondTheLastBlock",
+      "description": "startBlock 3",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": 3,
+      "endBlock": 3,
+      "expected": {
+        "error": "E_PAL3_INVALID_RANGE",
+        "dataBytes": 0
+      }
+    },
+    {
+      "name": "endBeforeStart",
+      "description": "endBlock 1 before startBlock 2",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": 2,
+      "endBlock": 1,
+      "expected": {
+        "error": "E_PAL3_INVALID_RANGE",
+        "dataBytes": 0
+      }
+    },
+    {
+      "name": "negativeStart",
+      "description": "startBlock -1",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": -1,
+      "endBlock": 1,
+      "expected": {
+        "error": "E_PAL3_INVALID_RANGE",
+        "dataBytes": 0
+      }
+    },
+    {
+      "name": "fractionalStart",
+      "description": "startBlock 0.5",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": 0.5,
+      "endBlock": 1,
+      "expected": {
+        "error": "E_PAL3_INVALID_RANGE",
+        "dataBytes": 0
+      }
+    },
+    {
+      "name": "textStart",
+      "description": "startBlock \"0\"",
+      "fileBytes": 786332,
+      "blockCount": 3,
+      "startBlock": "0",
+      "endBlock": 1,
+      "expected": {
+        "error": "E_PAL3_INVALID_RANGE",
+        "dataBytes": 0
+      }
     }
   ]
 }

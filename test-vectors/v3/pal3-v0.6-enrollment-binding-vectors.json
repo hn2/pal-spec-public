@@ -1,0 +1,197 @@
+{
+  "description": "PAL/3 Draft 0.6 decision vectors for section 11.3 item 2 (enrollment and migration) and 11.2 item 2 (caller binding). Written from the specification text; no reference implementation exists in pal-core.",
+  "version": "v0.6",
+  "enrollment": [
+    {
+      "name": "selfCertifiedEnrollsOnFirstLoad",
+      "description": "A self-certified device with the identity secret key enrolls itself on first load",
+      "input": {
+        "form": "selfCertified",
+        "identitySecretKeyPresent": true,
+        "nowMs": 1800000000000
+      },
+      "expected": {
+        "action": "enroll",
+        "newDeviceKeys": true,
+        "deviceIdSource": "random16",
+        "certFlags": 0,
+        "keepsDeviceId": true
+      }
+    },
+    {
+      "name": "noIdentitySecretKeyCannotSelfEnroll",
+      "description": "A device that holds only device keys cannot issue its own delegated certificate; it waits for one issued at pairing",
+      "input": {
+        "form": "selfCertified",
+        "identitySecretKeyPresent": false,
+        "nowMs": 1800000000000
+      },
+      "expected": {
+        "action": "none",
+        "reason": "needsPairingIssuedCertificate"
+      }
+    },
+    {
+      "name": "delegatedBeforeExpiryRenewsWithSameDeviceId",
+      "description": "A delegated certificate is renewed before expires_at_ms with the same device_id",
+      "input": {
+        "form": "delegated",
+        "identitySecretKeyPresent": true,
+        "nowMs": 1800000000000,
+        "expiresAtMs": 1800172800000,
+        "renewWindowMs": 604800000
+      },
+      "expected": {
+        "action": "renew",
+        "newDeviceKeys": false,
+        "deviceIdSource": "unchanged",
+        "certFlags": 0,
+        "keepsDeviceId": true
+      }
+    },
+    {
+      "name": "delegatedFarFromExpiryIsLeftAlone",
+      "description": "Outside the renewal window nothing is done",
+      "input": {
+        "form": "delegated",
+        "identitySecretKeyPresent": true,
+        "nowMs": 1800000000000,
+        "expiresAtMs": 1805184000000,
+        "renewWindowMs": 604800000
+      },
+      "expected": {
+        "action": "none",
+        "reason": "notDueForRenewal"
+      }
+    },
+    {
+      "name": "delegatedWithoutSecretKeyCannotRenewItself",
+      "description": "Renewal needs the identity secret key on the device",
+      "input": {
+        "form": "delegated",
+        "identitySecretKeyPresent": false,
+        "nowMs": 1800000000000,
+        "expiresAtMs": 1800172800000,
+        "renewWindowMs": 604800000
+      },
+      "expected": {
+        "action": "none",
+        "reason": "needsPairingIssuedCertificate"
+      }
+    },
+    {
+      "name": "deviceIdMustNotBeDerivedFromTheIdentityKey",
+      "description": "A device_id that equals the identity-derived value of the self-certified form is not acceptable for a delegated certificate",
+      "input": {
+        "form": "delegated",
+        "identitySecretKeyPresent": true,
+        "nowMs": 1800000000000,
+        "expiresAtMs": 1800172800000,
+        "renewWindowMs": 604800000,
+        "deviceIdSource": "derivedFromIdentityKey"
+      },
+      "expected": {
+        "action": "reject",
+        "reason": "deviceIdDerivedFromIdentity"
+      }
+    }
+  ],
+  "receiverForms": [
+    {
+      "name": "delegatedAcceptedWithoutStatement",
+      "description": "A receiver with no statement accepts the delegated form",
+      "input": {
+        "form": "delegated",
+        "revocationStatementHeld": false
+      },
+      "expected": {
+        "accept": true
+      }
+    },
+    {
+      "name": "selfCertifiedAcceptedWithoutStatement",
+      "description": "A receiver with no statement still accepts the self-certified form (migration)",
+      "input": {
+        "form": "selfCertified",
+        "revocationStatementHeld": false
+      },
+      "expected": {
+        "accept": true
+      }
+    },
+    {
+      "name": "delegatedAcceptedWithStatement",
+      "description": "With a statement held, a delegated certificate whose device_id is not revoked is accepted",
+      "input": {
+        "form": "delegated",
+        "revocationStatementHeld": true
+      },
+      "expected": {
+        "accept": true
+      }
+    },
+    {
+      "name": "selfCertifiedRefusedOnceAStatementIsHeld",
+      "description": "Once any statement is held the self-certified form is refused: its device_id cannot be revoked separately",
+      "input": {
+        "form": "selfCertified",
+        "revocationStatementHeld": true
+      },
+      "expected": {
+        "accept": false,
+        "error": "E_PAL3_DEVICE_REVOKED"
+      }
+    }
+  ],
+  "callerBinding": [
+    {
+      "name": "claimMatchesVerifiedCertificate",
+      "description": "The identity a request acts as equals the identity of the verified certificate",
+      "input": {
+        "verifiedCertificateIdentity": "idA",
+        "claimedIdentity": "idA",
+        "certificateVerified": true
+      },
+      "expected": {
+        "allowed": true
+      }
+    },
+    {
+      "name": "claimForAnotherIdentityIsRefused",
+      "description": "A request that names another identity than the verified certificate is refused",
+      "input": {
+        "verifiedCertificateIdentity": "idA",
+        "claimedIdentity": "idB",
+        "certificateVerified": true
+      },
+      "expected": {
+        "allowed": false
+      }
+    },
+    {
+      "name": "noVerifiedCertificateIsRefused",
+      "description": "Without a handshake-verified certificate no identity can be bound",
+      "input": {
+        "verifiedCertificateIdentity": null,
+        "claimedIdentity": "idA",
+        "certificateVerified": false
+      },
+      "expected": {
+        "allowed": false
+      }
+    },
+    {
+      "name": "missingClaimActsAsTheCertificateIdentity",
+      "description": "An operation that names no identity acts as the certificate identity",
+      "input": {
+        "verifiedCertificateIdentity": "idA",
+        "claimedIdentity": null,
+        "certificateVerified": true
+      },
+      "expected": {
+        "allowed": true,
+        "actsAs": "idA"
+      }
+    }
+  ]
+}

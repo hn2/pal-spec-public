@@ -1433,8 +1433,59 @@
       }
     },
     {
-      "name": "changedNetworkIdBreaksTheSignature",
-      "description": "networkId replaced after signing",
+      "name": "networkIdentityReplacedAfterSigningBreaksTheSignature",
+      "description": "creator, nonce, creation time and the identifier derived from them replaced after signing: consistent, but not what the administrator signed",
+      "state": {
+        "nowMs": 1795521600000,
+        "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "floor": {},
+        "storedSignature": null,
+        "handover": null,
+        "retired": []
+      },
+      "incoming": {
+        "name": "Example Network",
+        "admin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
+        "discoveryServers": [
+          "https://discovery.example.org"
+        ],
+        "relays": [
+          "relay.example.org:3478"
+        ],
+        "members": [
+          {
+            "publicKey": "8139770ea87d175f56a35466c34c7ecccb8d8a91b4ee37a25df60f5b8fc9b394",
+            "name": "Alice",
+            "revoked": false
+          },
+          {
+            "publicKey": "ed4928c628d1c2c6eae90338905995612959273a5c63f93636c14614ac8737d1",
+            "name": null,
+            "revoked": true
+          }
+        ],
+        "privacyMode": "normal",
+        "issuedAt": "2026-11-23T12:00:00.000Z",
+        "version": 4,
+        "expiresAt": "2026-12-23T12:00:00.000Z",
+        "networkCreator": "ca93ac1705187071d67b83c7ff0efe8108e8ec4530575d7726879333dbdabe7c",
+        "networkNonce": "0808080808080808080808080808080808080808080808080808080808080808",
+        "networkCreatedAtMs": 1793491200001,
+        "networkId": "0a102610417c6909d6d38df27f78eaaa7d0b4a1b5a9029faa5220f5a943f57636d93e65134874f91c1b13ff60931849a",
+        "signature": "b16c70d0881c0171b01cc5ea426691c62f1fe4ba6165d4bb2d67d8be81cac26985ef0e5499a5bd3ce974364056b5f1c87ac9f3408d12a156efceceb8b643f40d"
+      },
+      "options": {
+        "replace": false,
+        "expectAdmin": null,
+        "fileBytes": 4096
+      },
+      "expected": {
+        "error": "E_PRIVATE_NETWORK_BAD_SIGNATURE"
+      }
+    },
+    {
+      "name": "networkIdNotDerivedFromItsFieldsIsRefused",
+      "description": "networkId replaced after signing by a value that is not the identifier of creator, nonce and creation time",
       "state": {
         "nowMs": 1795521600000,
         "currentAdmin": "8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c",
@@ -1480,7 +1531,7 @@
         "fileBytes": 4096
       },
       "expected": {
-        "error": "E_PRIVATE_NETWORK_BAD_SIGNATURE"
+        "error": "E_PRIVATE_NETWORK_BAD_NETWORK_ID"
       }
     }
   ],
@@ -1833,6 +1884,61 @@
       "name": "unreadableAddressIsRefused",
       "url": "https://[::1",
       "allowed": false
+    }
+  ],
+  "behaviors": [
+    {
+      "name": "publicDhtIsRefused",
+      "requirement": "MUST NOT use a public DHT",
+      "operation": "startPublicDht",
+      "profile": "active",
+      "expected": {
+        "decision": "refused"
+      }
+    },
+    {
+      "name": "publicDhtIsRefusedInLockdown",
+      "requirement": "MUST NOT use a public DHT",
+      "operation": "startPublicDht",
+      "profile": "lockdown",
+      "expected": {
+        "decision": "refused"
+      }
+    },
+    {
+      "name": "publicBootstrapListIsNotUsed",
+      "requirement": "MUST NOT use a public bootstrap list: the discovery servers are those of the profile and nothing else",
+      "operation": "discoveryServers",
+      "profile": "active",
+      "expected": {
+        "servers": [
+          "https://discovery.example.org"
+        ]
+      }
+    },
+    {
+      "name": "lockdownHasNoDiscoveryServers",
+      "requirement": "Lockdown: no discovery servers, so the client refuses instead of falling back to the public network",
+      "operation": "discoveryServers",
+      "profile": "lockdown",
+      "expected": {
+        "servers": []
+      }
+    },
+    {
+      "name": "handEditedStoredProfileIsVerifiedAgainWithin60Seconds",
+      "requirement": "A hand-edited stored profile MUST NOT widen access (verified again at least every 60 seconds)",
+      "operation": "isMemberAllowed",
+      "profile": "active",
+      "edit": {
+        "addMember": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "resigned": false
+      },
+      "afterMs": 60000,
+      "publicKey": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "expected": {
+        "allowed": false
+      }
     }
   ]
 }

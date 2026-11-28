@@ -113,6 +113,113 @@ const gate = gateScenarios.map(([name, description, caps, carrier, pathKind, cha
   return { name, description, capabilities: caps, carrier, initialPathKind: pathKind, pathChanges: changes, drainWindowMs: 3000, samples };
 });
 
+// Stream rule (6.2 Receiver): which streams may carry plaintext DATA, what is discarded and what closes the session.
+// Every scenario runs two real sessions; the receiver is the initiator that opened the read. A trailing record is forged with
+// the responder's bulk protector, so the bytes are random per run and the vector records only the decision.
+const { Pal3MerkleTree } = await lib('pal3/merkle.js');
+const fileBytes = Buffer.from(Array.from({ length: 200_000 }, (_, i) => (i * 7 + 3) % 251));
+const tree = Pal3MerkleTree.fromBuffer(fileBytes);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function streamSession(connected) {
+  const idI = hs.generateHybridSigningIdentity({ edSeed: Buffer.alloc(32, 0x41), dsaSeed: Buffer.alloc(32, 0x42) });
+  const idR = hs.generateHybridSigningIdentity({ edSeed: Buffer.alloc(32, 0x43), dsaSeed: Buffer.alloc(32, 0x44) });
+  const caps = ['core.v1', 'stream.v1', 'grants.v1', KEY, BULK];
+  const init = new hs.HandshakeInitiator({ deviceCert: hs.issueDeviceCertificate({ identity: idI }), deviceKeys: idI, capabilities: caps });
+  const resp = hs.processHelloAndCreateAccept(init.createHelloRecord(), { deviceCert: hs.issueDeviceCertificate({ identity: idR }), deviceKeys: idR, capabilities: caps });
+  const fin = init.processAcceptAndCreateFinish(resp.acceptRecord);
+  const done = resp.verifyFinish(fin.finishRecord);
+  hs.verifyReadyRecord(fin.ctlProtector, done.readyRecord);
+  const clock = { t: 0 };
+  const held = [];
+  let rx;
+  let tx;
+  rx = new Pal3SessionMux({
+    isInitiator: true, prk: fin.prk, exporterSecret: fin.exporterSecret, ctlProtector: fin.ctlProtector, peerCert: fin.peerCert,
+    negotiatedCapabilities: fin.negotiatedCapabilities, pathKind: 'direct_udp', carrier: 'c2', autoRekey: false, now: () => clock.t,
+    sendWireRecord: async (ch, wire) => { if (connected) await tx.receiveWireRecord(ch, wire); },
+  });
+  tx = new Pal3SessionMux({
+    isInitiator: false, prk: done.prk, exporterSecret: done.exporterSecret, ctlProtector: done.ctlProtector, peerCert: done.peerCert,
+    negotiatedCapabilities: done.negotiatedCapabilities, pathKind: 'direct_udp', carrier: 'c2', allowUnauthenticated: true, autoRekey: false, now: () => clock.t,
+    getContentTree: async () => ({ tree, readBlock: (i) => fileBytes.subarray(i * 262144, (i + 1) * 262144) }),
+    sendWireRecord: async (ch, wire) => { held.push({ ch, wire: Buffer.from(wire) }); },
+  });
+  const settle = async () => { let n = -1; while (n !== held.length) { n = held.length; await sleep(40); } };
+  let closeError = null;
+  const deliver = async (records) => {
+    for (const r of records) {
+      try { await rx.receiveWireRecord(r.ch, r.wire); } catch (err) { closeError ??= /^(E_[A-Z0-9_]+)/.exec(err.message)?.[1] ?? err.message; break; }
+    }
+  };
+  const forge = (streamId) => ({ ch: CHANNEL_ID.BULK_0, wire: tx.channels.get(CHANNEL_ID.BULK_0).seal({ type: RECORD_TYPE.DATA, streamId, payload: payload(64), plaintext: true }) });
+  return { clock, rx, held, settle, deliver, forge, closeError: () => closeError };
+}
+const readSpec = { contentId: tree.contentId, expectedRoot: tree.root, totalBytes: fileBytes.length };
+async function streamScenarioRun(sc) {
+  const live = sc.stream === 'blockRead' || sc.stream === 'batchRead';
+  const real = live && sc.streamState !== 'cancelled';
+  const S = await streamSession(real);
+  let delivered = 0;
+  let result = null;
+  let streamId = 7;
+  const startRead = () => {
+    const p = sc.stream === 'blockRead'
+      ? S.rx.readVerifiedBlocks({ ...readSpec, onVerifiedBlock: () => { delivered += 1; } })
+      : S.rx.readVerifiedBatch({ files: [readSpec], onVerifiedFile: () => { delivered += 1; } });
+    p.then((r) => { result = r; }, () => {});
+  };
+  if (live || sc.stream === 'rpcRequest') {
+    if (sc.stream === 'rpcRequest') S.rx.request('share.list', {}).catch(() => {});
+    else startRead();
+    await sleep(20);
+    streamId = [...S.rx.outboundStreams.keys()].at(-1);
+  }
+  if (sc.streamState === 'cancelled') { await S.rx.cancelStream(streamId); await sleep(20); }
+  if (sc.streamState === 'finished') {
+    await S.settle();
+    await S.deliver(S.held.splice(0));
+    await sleep(60);
+    if (!result) throw new Error(`the read did not finish: ${sc.name}`);
+  }
+  if (sc.pathChange) { S.clock.t = sc.pathChange.atMs; S.rx.setActivePath(sc.pathChange.to); }
+  S.clock.t = sc.arrivalMs;
+  let outcome;
+  if (sc.streamState === 'open' && live) {
+    await S.settle();
+    await S.deliver(S.held.splice(0));
+    await sleep(60);
+    outcome = S.closeError() ? 'closed' : (result && delivered > 0 ? 'delivered' : 'stalled');
+  } else {
+    await S.deliver([S.forge(streamId)]);
+    outcome = S.closeError() ? 'closed' : (S.rx.closed ? 'closed' : 'discarded');
+  }
+  const error = S.closeError();
+  return { outcome, error: error ?? undefined, sessionClosed: S.rx.closed };
+}
+const streamScenarios = [
+  ['blockReadOpenDirect', 'A block read the receiver opened, path direct: the plaintext DATA is accepted and Merkle-verified', 'blockRead', 'open', null, 0, 'delivered'],
+  ['batchReadOpenDirect', 'A batch read the receiver opened, path direct', 'batchRead', 'open', null, 0, 'delivered'],
+  ['blockReadOpenInsideDrainWindow', 'The path left direct at t=1000 ms; plaintext DATA in flight arrives at t=2000 ms', 'blockRead', 'open', { atMs: 1000, to: 'buddy_relay' }, 2000, 'delivered'],
+  ['blockReadOpenLastMillisecondOfDrainWindow', 'The same at t=3999 ms (the window is [1000, 4000))', 'blockRead', 'open', { atMs: 1000, to: 'buddy_relay' }, 3999, 'delivered'],
+  ['blockReadOpenAtEndOfDrainWindow', 'The same at t=4000 ms: the window has ended, the session closes', 'blockRead', 'open', { atMs: 1000, to: 'buddy_relay' }, 4000, 'closed'],
+  ['plaintextOnAStreamNeverOpened', 'Plaintext DATA on a stream id the receiver never opened', 'none', 'unknown', null, 0, 'closed'],
+  ['plaintextOnARequestStream', 'Plaintext DATA on a stream opened for an ordinary request (not a block or batch read)', 'rpcRequest', 'open', null, 0, 'closed'],
+  ['plaintextOnARequestStreamInsideDrainWindow', 'The drain window does not make a request stream eligible', 'rpcRequest', 'open', { atMs: 1000, to: 'buddy_relay' }, 2000, 'closed'],
+  ['trailingOnACancelledBlockStream', 'Plaintext DATA after the receiver cancelled its block read: discarded, the session stays open', 'blockRead', 'cancelled', null, 0, 'discarded'],
+  ['trailingOnAFinishedBlockStream', 'Plaintext DATA after a block read finished: discarded', 'blockRead', 'finished', null, 0, 'discarded'],
+  ['trailingOnAFinishedBatchStream', 'Plaintext DATA after a batch read finished: discarded', 'batchRead', 'finished', null, 0, 'discarded'],
+  ['trailingOnACancelledStreamInsideDrainWindow', 'Trailing plaintext DATA of a cancelled stream at t=2000 ms after the path left direct at t=1000 ms: discarded', 'blockRead', 'cancelled', { atMs: 1000, to: 'buddy_relay' }, 2000, 'discarded'],
+  ['trailingOnACancelledStreamAfterDrainWindow', 'The same at t=4000 ms: outside the drain window on a non-direct path the record closes the session', 'blockRead', 'cancelled', { atMs: 1000, to: 'buddy_relay' }, 4000, 'closed'],
+  ['trailingOnAFinishedStreamAfterDrainWindow', 'A finished stream, the path left direct, t=4000 ms: closes the session', 'blockRead', 'finished', { atMs: 1000, to: 'buddy_relay' }, 4000, 'closed'],
+];
+const streamRule = [];
+for (const [name, description, stream, streamState, pathChange, arrivalMs, expectedOutcome] of streamScenarios) {
+  const got = await streamScenarioRun({ name, stream, streamState, pathChange, arrivalMs });
+  if (got.outcome !== expectedOutcome) throw new Error(`reference answered ${got.outcome} (${got.error}), not ${expectedOutcome}: ${name}`);
+  if (got.outcome === 'closed' && got.error !== 'E_PAL3_PLAINTEXT_FORBIDDEN') throw new Error(`closed with ${got.error}: ${name}`);
+  streamRule.push({ name, description, stream, streamState, pathChange, arrivalMs, drainWindowMs: 3000, expected: got.outcome === 'closed' ? { outcome: 'closed', error: 'E_PAL3_PLAINTEXT_FORBIDDEN' } : { outcome: got.outcome } });
+}
+
 const doc = {
   specVersion: '0.6.20',
   section: '6.2',
@@ -126,6 +233,7 @@ const doc = {
   rejected,
   sendSideRejected: sendSide,
   gate,
+  streamRule,
 };
 writeFileSync(out, `${JSON.stringify(doc, null, 2)}\n`);
-console.log(`wrote ${out}: ${accepted.length} records, ${rejected.length} rejected, ${gate.length} gate scenarios`);
+console.log(`wrote ${out}: ${accepted.length} records, ${rejected.length} rejected, ${gate.length} gate scenarios, ${streamRule.length} stream rule scenarios`);

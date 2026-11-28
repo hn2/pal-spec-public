@@ -181,7 +181,7 @@
         "*"
       ],
       "required": "fs:read",
-      "allowed": true
+      "allowed": false
     },
     {
       "name": "wildcardNeverImpliesExec",
