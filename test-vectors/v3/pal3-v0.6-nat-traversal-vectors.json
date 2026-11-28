@@ -182,6 +182,1448 @@
       "globalUnicast": false
     }
   ],
+  "punchPacing": [
+    {
+      "requestedMs": 5,
+      "effectiveMs": 20,
+      "probesPerSecondAtMost": 50
+    },
+    {
+      "requestedMs": 19,
+      "effectiveMs": 20,
+      "probesPerSecondAtMost": 50
+    },
+    {
+      "requestedMs": 20,
+      "effectiveMs": 20,
+      "probesPerSecondAtMost": 50
+    },
+    {
+      "requestedMs": 21,
+      "effectiveMs": 21,
+      "probesPerSecondAtMost": 47.61904761904762
+    },
+    {
+      "requestedMs": 100,
+      "effectiveMs": 100,
+      "probesPerSecondAtMost": 10
+    },
+    {
+      "requestedMs": 0,
+      "effectiveMs": 20,
+      "probesPerSecondAtMost": 50
+    },
+    {
+      "requestedMs": -5,
+      "effectiveMs": 20,
+      "probesPerSecondAtMost": 50
+    },
+    {
+      "requestedMs": "NaN",
+      "effectiveMs": 20,
+      "probesPerSecondAtMost": 50
+    },
+    {
+      "requestedMs": null,
+      "effectiveMs": 20,
+      "probesPerSecondAtMost": 50
+    }
+  ],
+  "portPrediction": [
+    {
+      "name": "sequentialStride",
+      "description": "Two observed ports 4 apart",
+      "observedPorts": [
+        41000,
+        41004
+      ],
+      "maxPorts": 16,
+      "ports": [
+        41004,
+        41008,
+        41012,
+        41016,
+        41020,
+        41024,
+        41028,
+        41032,
+        41036,
+        41040,
+        41044,
+        41048,
+        41052,
+        41056,
+        41060,
+        41064
+      ]
+    },
+    {
+      "name": "defaultBound",
+      "description": "No maxPorts: the default is the bound",
+      "observedPorts": [
+        41000,
+        41004
+      ],
+      "maxPorts": null,
+      "ports": [
+        41004,
+        41008,
+        41012,
+        41016,
+        41020,
+        41024,
+        41028,
+        41032,
+        41036,
+        41040,
+        41044,
+        41048,
+        41052,
+        41056,
+        41060,
+        41064,
+        41068,
+        41005,
+        41003,
+        41006,
+        41002,
+        41007,
+        41001,
+        41000,
+        41009,
+        40999,
+        41010,
+        40998,
+        41011,
+        40997,
+        40996,
+        41013,
+        40995,
+        41014,
+        40994,
+        41015,
+        40993,
+        40992,
+        41017,
+        40991,
+        41018,
+        40990,
+        41019,
+        40989,
+        40988,
+        41021,
+        40987,
+        41022,
+        40986,
+        41023,
+        40985,
+        40984,
+        41025,
+        40983,
+        41026,
+        40982,
+        41027,
+        40981,
+        40980,
+        41029,
+        40979,
+        41030,
+        40978,
+        41031
+      ]
+    },
+    {
+      "name": "askingForTheBound",
+      "description": "maxPorts 64",
+      "observedPorts": [
+        41000,
+        41004
+      ],
+      "maxPorts": 64,
+      "ports": [
+        41004,
+        41008,
+        41012,
+        41016,
+        41020,
+        41024,
+        41028,
+        41032,
+        41036,
+        41040,
+        41044,
+        41048,
+        41052,
+        41056,
+        41060,
+        41064,
+        41068,
+        41005,
+        41003,
+        41006,
+        41002,
+        41007,
+        41001,
+        41000,
+        41009,
+        40999,
+        41010,
+        40998,
+        41011,
+        40997,
+        40996,
+        41013,
+        40995,
+        41014,
+        40994,
+        41015,
+        40993,
+        40992,
+        41017,
+        40991,
+        41018,
+        40990,
+        41019,
+        40989,
+        40988,
+        41021,
+        40987,
+        41022,
+        40986,
+        41023,
+        40985,
+        40984,
+        41025,
+        40983,
+        41026,
+        40982,
+        41027,
+        40981,
+        40980,
+        41029,
+        40979,
+        41030,
+        40978,
+        41031
+      ]
+    },
+    {
+      "name": "askingForMoreThanTheBound",
+      "description": "maxPorts 256 is lowered to 64",
+      "observedPorts": [
+        41000,
+        41004
+      ],
+      "maxPorts": 256,
+      "ports": [
+        41004,
+        41008,
+        41012,
+        41016,
+        41020,
+        41024,
+        41028,
+        41032,
+        41036,
+        41040,
+        41044,
+        41048,
+        41052,
+        41056,
+        41060,
+        41064,
+        41068,
+        41005,
+        41003,
+        41006,
+        41002,
+        41007,
+        41001,
+        41000,
+        41009,
+        40999,
+        41010,
+        40998,
+        41011,
+        40997,
+        40996,
+        41013,
+        40995,
+        41014,
+        40994,
+        41015,
+        40993,
+        40992,
+        41017,
+        40991,
+        41018,
+        40990,
+        41019,
+        40989,
+        40988,
+        41021,
+        40987,
+        41022,
+        40986,
+        41023,
+        40985,
+        40984,
+        41025,
+        40983,
+        41026,
+        40982,
+        41027,
+        40981,
+        40980,
+        41029,
+        40979,
+        41030,
+        40978,
+        41031
+      ]
+    },
+    {
+      "name": "askingForAThousand",
+      "description": "maxPorts 1000 is lowered to 64",
+      "observedPorts": [
+        41000
+      ],
+      "maxPorts": 1000,
+      "ports": [
+        41000,
+        41001,
+        41002,
+        41003,
+        41004,
+        41005,
+        41006,
+        41007,
+        41008,
+        41009,
+        41010,
+        41011,
+        41012,
+        41013,
+        41014,
+        41015,
+        41016,
+        40999,
+        40998,
+        40997,
+        40996,
+        40995,
+        40994,
+        40993,
+        40992,
+        40991,
+        40990,
+        40989,
+        40988,
+        40987,
+        40986,
+        40985,
+        40984,
+        41017,
+        40983,
+        41018,
+        40982,
+        41019,
+        40981,
+        41020,
+        40980,
+        41021,
+        40979,
+        41022,
+        40978,
+        41023,
+        40977,
+        41024,
+        40976,
+        41025,
+        40975,
+        41026,
+        40974,
+        41027,
+        40973,
+        41028,
+        40972,
+        41029,
+        40971,
+        41030,
+        40970,
+        41031,
+        40969,
+        41032
+      ]
+    },
+    {
+      "name": "noObservationsUsesTheBasePort",
+      "description": "No observation: probing starts at the base port",
+      "observedPorts": [],
+      "maxPorts": 32,
+      "ports": [
+        52474,
+        52475,
+        52476,
+        52477,
+        52478,
+        52479,
+        52480,
+        52481,
+        52482,
+        52483,
+        52484,
+        52485,
+        52486,
+        52487,
+        52488,
+        52489,
+        52490,
+        52473,
+        52472,
+        52471,
+        52470,
+        52469,
+        52468,
+        52467,
+        52466,
+        52465,
+        52464,
+        52463,
+        52462,
+        52461,
+        52460,
+        52459
+      ]
+    },
+    {
+      "name": "observedBelow1024IsIgnored",
+      "description": "Ports below 1024 are never probed",
+      "observedPorts": [
+        80,
+        443
+      ],
+      "maxPorts": 64,
+      "ports": [
+        52474,
+        52475,
+        52476,
+        52477,
+        52478,
+        52479,
+        52480,
+        52481,
+        52482,
+        52483,
+        52484,
+        52485,
+        52486,
+        52487,
+        52488,
+        52489,
+        52490,
+        52473,
+        52472,
+        52471,
+        52470,
+        52469,
+        52468,
+        52467,
+        52466,
+        52465,
+        52464,
+        52463,
+        52462,
+        52461,
+        52460,
+        52459,
+        52458,
+        52491,
+        52457,
+        52492,
+        52456,
+        52493,
+        52455,
+        52494,
+        52454,
+        52495,
+        52453,
+        52496,
+        52452,
+        52497,
+        52451,
+        52498,
+        52450,
+        52499,
+        52449,
+        52500,
+        52448,
+        52501,
+        52447,
+        52502,
+        52446,
+        52503,
+        52445,
+        52504,
+        52444,
+        52505,
+        52443,
+        52506
+      ]
+    },
+    {
+      "name": "nearTheTopOfTheRange",
+      "description": "Ports above 65535 are never probed",
+      "observedPorts": [
+        65500,
+        65510
+      ],
+      "maxPorts": 64,
+      "ports": [
+        65510,
+        65520,
+        65530,
+        65511,
+        65509,
+        65512,
+        65508,
+        65513,
+        65507,
+        65514,
+        65506,
+        65515,
+        65505,
+        65516,
+        65504,
+        65517,
+        65503,
+        65518,
+        65502,
+        65519,
+        65501,
+        65500,
+        65521,
+        65499,
+        65522,
+        65498,
+        65523,
+        65497,
+        65524,
+        65496,
+        65525,
+        65495,
+        65526,
+        65494,
+        65527,
+        65493,
+        65528,
+        65492,
+        65529,
+        65491,
+        65490,
+        65531,
+        65489,
+        65532,
+        65488,
+        65533,
+        65487,
+        65534,
+        65486,
+        65535,
+        65485,
+        65484,
+        65483,
+        65482,
+        65481,
+        65480,
+        65479,
+        65478,
+        65477,
+        65476,
+        65475,
+        65474,
+        65473,
+        65472
+      ]
+    }
+  ],
+  "dhtLimits": {
+    "quorumPrefixes": 3,
+    "ttlMs": 1800000,
+    "maxEntries": 64,
+    "prefixBitsIpv4": 16,
+    "prefixBitsIpv6": 48,
+    "maxPorts": 64,
+    "minPunchIntervalMs": 20
+  },
+  "dhtExternalAddress": [
+    {
+      "name": "threeDistinctPrefixesAgree",
+      "description": "Three reporters in three different /16 prefixes report the same address",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "23.0.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        }
+      ]
+    },
+    {
+      "name": "twoPrefixesAreNotEnough",
+      "description": "Two prefixes agree",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "oneReporterPerPrefix",
+      "description": "Three reporters in one /16 count as one prefix",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "11.1.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "11.1.0.2",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "11.1.200.3",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "neighbouringSlash16AreDistinct",
+      "description": "Reporters in 11.1.x.x, 11.2.x.x and 11.3.x.x are three prefixes",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "11.1.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "11.2.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "11.3.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        }
+      ]
+    },
+    {
+      "name": "reportersDisagree",
+      "description": "Three prefixes report three different addresses",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.8",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "203.0.113.9",
+          "reporterIp": "23.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "areporterThatChangesItsMindCountsOnce",
+      "description": "One reporter reports another address later: its first report is replaced, so the quorum is reached only by its second report",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.8",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 3000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "23.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 4000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        }
+      ]
+    },
+    {
+      "name": "anObservationExpiresAfterThirtyMinutes",
+      "description": "The first report is 31 minutes old when the third arrives",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 600000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1860000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "23.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "anObservationOneMillisecondBeforeExpiry",
+      "description": "The third report arrives 1 ms before the first expires",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1799999,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "23.0.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        }
+      ]
+    },
+    {
+      "name": "anObservationAtExpiry",
+      "description": "The third report arrives exactly 30 minutes after the first: the first is gone",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1800000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "23.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "tableOfSixtyFourDropsTheOldest",
+      "description": "64 other prefixes report other addresses after the first report: the table (64 entries) drops the oldest entries, so two later reports are not a quorum",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "198.51.100.1",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1001,
+          "reportedIp": "198.51.100.2",
+          "reporterIp": "23.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1002,
+          "reportedIp": "198.51.100.3",
+          "reporterIp": "24.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1003,
+          "reportedIp": "198.51.100.4",
+          "reporterIp": "25.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1004,
+          "reportedIp": "198.51.100.5",
+          "reporterIp": "26.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1005,
+          "reportedIp": "198.51.100.6",
+          "reporterIp": "27.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1006,
+          "reportedIp": "198.51.100.7",
+          "reporterIp": "28.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1007,
+          "reportedIp": "198.51.100.8",
+          "reporterIp": "29.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1008,
+          "reportedIp": "198.51.100.9",
+          "reporterIp": "30.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1009,
+          "reportedIp": "198.51.100.10",
+          "reporterIp": "31.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1010,
+          "reportedIp": "198.51.100.11",
+          "reporterIp": "32.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1011,
+          "reportedIp": "198.51.100.12",
+          "reporterIp": "33.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1012,
+          "reportedIp": "198.51.100.13",
+          "reporterIp": "34.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1013,
+          "reportedIp": "198.51.100.14",
+          "reporterIp": "35.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1014,
+          "reportedIp": "198.51.100.15",
+          "reporterIp": "36.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1015,
+          "reportedIp": "198.51.100.16",
+          "reporterIp": "37.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1016,
+          "reportedIp": "198.51.100.17",
+          "reporterIp": "38.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1017,
+          "reportedIp": "198.51.100.18",
+          "reporterIp": "39.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1018,
+          "reportedIp": "198.51.100.19",
+          "reporterIp": "40.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1019,
+          "reportedIp": "198.51.100.20",
+          "reporterIp": "41.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1020,
+          "reportedIp": "198.51.100.21",
+          "reporterIp": "42.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1021,
+          "reportedIp": "198.51.100.22",
+          "reporterIp": "43.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1022,
+          "reportedIp": "198.51.100.23",
+          "reporterIp": "44.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1023,
+          "reportedIp": "198.51.100.24",
+          "reporterIp": "45.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1024,
+          "reportedIp": "198.51.100.25",
+          "reporterIp": "46.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1025,
+          "reportedIp": "198.51.100.26",
+          "reporterIp": "47.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1026,
+          "reportedIp": "198.51.100.27",
+          "reporterIp": "48.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1027,
+          "reportedIp": "198.51.100.28",
+          "reporterIp": "49.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1028,
+          "reportedIp": "198.51.100.29",
+          "reporterIp": "50.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1029,
+          "reportedIp": "198.51.100.30",
+          "reporterIp": "51.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1030,
+          "reportedIp": "198.51.100.31",
+          "reporterIp": "52.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1031,
+          "reportedIp": "198.51.100.32",
+          "reporterIp": "53.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1032,
+          "reportedIp": "198.51.100.33",
+          "reporterIp": "54.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1033,
+          "reportedIp": "198.51.100.34",
+          "reporterIp": "55.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1034,
+          "reportedIp": "198.51.100.35",
+          "reporterIp": "56.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1035,
+          "reportedIp": "198.51.100.36",
+          "reporterIp": "57.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1036,
+          "reportedIp": "198.51.100.37",
+          "reporterIp": "58.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1037,
+          "reportedIp": "198.51.100.38",
+          "reporterIp": "59.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1038,
+          "reportedIp": "198.51.100.39",
+          "reporterIp": "60.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1039,
+          "reportedIp": "198.51.100.40",
+          "reporterIp": "61.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1040,
+          "reportedIp": "198.51.100.41",
+          "reporterIp": "62.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1041,
+          "reportedIp": "198.51.100.42",
+          "reporterIp": "63.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1042,
+          "reportedIp": "198.51.100.43",
+          "reporterIp": "64.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1043,
+          "reportedIp": "198.51.100.44",
+          "reporterIp": "65.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1044,
+          "reportedIp": "198.51.100.45",
+          "reporterIp": "66.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1045,
+          "reportedIp": "198.51.100.46",
+          "reporterIp": "67.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1046,
+          "reportedIp": "198.51.100.47",
+          "reporterIp": "68.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1047,
+          "reportedIp": "198.51.100.48",
+          "reporterIp": "69.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1048,
+          "reportedIp": "198.51.100.49",
+          "reporterIp": "70.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1049,
+          "reportedIp": "198.51.100.50",
+          "reporterIp": "71.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1050,
+          "reportedIp": "198.51.100.51",
+          "reporterIp": "72.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1051,
+          "reportedIp": "198.51.100.52",
+          "reporterIp": "73.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1052,
+          "reportedIp": "198.51.100.53",
+          "reporterIp": "74.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1053,
+          "reportedIp": "198.51.100.54",
+          "reporterIp": "75.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1054,
+          "reportedIp": "198.51.100.55",
+          "reporterIp": "76.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1055,
+          "reportedIp": "198.51.100.56",
+          "reporterIp": "77.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1056,
+          "reportedIp": "198.51.100.57",
+          "reporterIp": "78.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1057,
+          "reportedIp": "198.51.100.58",
+          "reporterIp": "79.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1058,
+          "reportedIp": "198.51.100.59",
+          "reporterIp": "80.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1059,
+          "reportedIp": "198.51.100.60",
+          "reporterIp": "81.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1060,
+          "reportedIp": "198.51.100.61",
+          "reporterIp": "82.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1061,
+          "reportedIp": "198.51.100.62",
+          "reporterIp": "83.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1062,
+          "reportedIp": "198.51.100.63",
+          "reporterIp": "84.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1063,
+          "reportedIp": "198.51.100.64",
+          "reporterIp": "85.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 5000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "90.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 5001,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "91.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "ipv6Slash48Prefixes",
+      "description": "IPv6 reporters count per /48",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "2606:4700:4700::1111",
+          "reporterIp": "2a00:1450:1::1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "2606:4700:4700::1111",
+          "reporterIp": "2a00:1450:2::1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "2606:4700:4700::1111",
+          "reporterIp": "2a00:1450:3::1",
+          "readOnly": false,
+          "externalIp": "2606:4700:4700:0000:0000:0000:0000:1111"
+        }
+      ]
+    },
+    {
+      "name": "ipv6OneSlash48IsOnePrefix",
+      "description": "Three IPv6 reporters in one /48",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "2606:4700:4700::1111",
+          "reporterIp": "2a00:1450:1:1::1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "2606:4700:4700::1111",
+          "reporterIp": "2a00:1450:1:2::1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "2606:4700:4700::1111",
+          "reporterIp": "2a00:1450:1:3::1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "privateAddressFromAPrivateReporter",
+      "description": "A non-global address reported by a non-global reporter needs no quorum (private network)",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "192.168.1.5",
+          "reporterIp": "192.168.1.1",
+          "readOnly": false,
+          "externalIp": "192.168.1.5"
+        }
+      ]
+    },
+    {
+      "name": "privateAddressFromAGlobalReporter",
+      "description": "A non-global address reported by a global reporter needs the quorum",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "192.168.1.5",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "globalAddressFromAPrivateReporter",
+      "description": "A global address reported by a non-global reporter needs the quorum",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "192.168.1.1",
+          "readOnly": true,
+          "externalIp": null
+        }
+      ]
+    },
+    {
+      "name": "laterReportsDoNotChangeTheAddress",
+      "description": "After the address is confirmed, three prefixes that report another address change nothing",
+      "steps": [
+        {
+          "atMs": 0,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "21.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 1000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "22.0.0.1",
+          "readOnly": true,
+          "externalIp": null
+        },
+        {
+          "atMs": 2000,
+          "reportedIp": "203.0.113.7",
+          "reporterIp": "23.0.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        },
+        {
+          "atMs": 3000,
+          "reportedIp": "203.0.113.99",
+          "reporterIp": "24.0.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        },
+        {
+          "atMs": 4000,
+          "reportedIp": "203.0.113.99",
+          "reporterIp": "25.0.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        },
+        {
+          "atMs": 5000,
+          "reportedIp": "203.0.113.99",
+          "reporterIp": "26.0.0.1",
+          "readOnly": false,
+          "externalIp": "203.0.113.7"
+        }
+      ]
+    }
+  ],
   "observations": [
     {
       "name": "singleObservationIsNeverConfirmed",

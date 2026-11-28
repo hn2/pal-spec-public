@@ -86,7 +86,8 @@ const accepts = [
   accept('retiredAdministratorCannotSignAgain', 'The old key was replaced by a handover', state({ currentAdmin: newAdmin.publicKey, retired: [admin.publicKey] }), signed(base({ version: 9 })), { replace: true, expectAdmin: admin.publicKey }, { error: 'E_PRIVATE_NETWORK_RETIRED_ADMIN' }),
   accept('expiredStoredProfileEndsWithNewerProfileFromTheSameAdministrator', 'The stored profile expired (lockdown); a newer profile from the same administrator ends it without confirmation', state({ currentAdmin: admin.publicKey, floor: { [admin.publicKey]: 3 }, storedSignature: 'aa' }), signed(base({ version: 4 })), {}, accepted),
   accept('networkFieldsAreSigned', 'networkId, creator, nonce and creation time are part of the signed bytes', state({ currentAdmin: admin.publicKey }), signed(base({ version: 4, ...networkFields })), {}, accepted),
-  accept('changedNetworkIdBreaksTheSignature', 'networkId replaced after signing', state({ currentAdmin: admin.publicKey }), { ...signed(base({ version: 4, ...networkFields })), networkId: 'dd'.repeat(48) }, {}, { error: 'E_PRIVATE_NETWORK_BAD_SIGNATURE' }),
+  accept('networkIdentityReplacedAfterSigningBreaksTheSignature', 'creator, nonce, creation time and the identifier derived from them replaced after signing: consistent, but not what the administrator signed', state({ currentAdmin: admin.publicKey }), { ...signed(base({ version: 4, ...networkFields })), networkCreator: otherAdmin.publicKey, networkNonce: '08'.repeat(32), networkCreatedAtMs: createdMs + 1, networkId: networkIdOf(otherAdmin.publicKey, '08'.repeat(32), createdMs + 1) }, {}, { error: 'E_PRIVATE_NETWORK_BAD_SIGNATURE' }),
+  accept('networkIdNotDerivedFromItsFieldsIsRefused', 'networkId replaced after signing by a value that is not the identifier of creator, nonce and creation time', state({ currentAdmin: admin.publicKey }), { ...signed(base({ version: 4, ...networkFields })), networkId: 'dd'.repeat(48) }, {}, { error: 'E_PRIVATE_NETWORK_BAD_NETWORK_ID' }),
 ];
 
 // 13.5: what a client does with a stored profile, and with hosts and keys while a profile is active.
@@ -121,6 +122,15 @@ const hostCases = [
   ['unreadableAddressIsRefused', 'https://[::1', false],
 ].map(([name, url, allowed]) => ({ name, url, allowed }));
 
+// 13.5: what a client does while a profile is active, beyond hosts and members. `profile` names the stored profile state.
+const behaviors = [
+  { name: 'publicDhtIsRefused', requirement: 'MUST NOT use a public DHT', operation: 'startPublicDht', profile: 'active', expected: { decision: 'refused' } },
+  { name: 'publicDhtIsRefusedInLockdown', requirement: 'MUST NOT use a public DHT', operation: 'startPublicDht', profile: 'lockdown', expected: { decision: 'refused' } },
+  { name: 'publicBootstrapListIsNotUsed', requirement: 'MUST NOT use a public bootstrap list: the discovery servers are those of the profile and nothing else', operation: 'discoveryServers', profile: 'active', expected: { servers: net.discoveryServers } },
+  { name: 'lockdownHasNoDiscoveryServers', requirement: 'Lockdown: no discovery servers, so the client refuses instead of falling back to the public network', operation: 'discoveryServers', profile: 'lockdown', expected: { servers: [] } },
+  { name: 'handEditedStoredProfileIsVerifiedAgainWithin60Seconds', requirement: 'A hand-edited stored profile MUST NOT widen access (verified again at least every 60 seconds)', operation: 'isMemberAllowed', profile: 'active', edit: { addMember: 'cc'.repeat(32), resigned: false }, afterMs: 60000, publicKey: 'cc'.repeat(32), expected: { allowed: false } },
+];
+
 const doc = {
   specVersion: '0.6.22',
   section: '13.2, 13.4, 13.5, 13.6',
@@ -136,6 +146,7 @@ const doc = {
   activeProfile: net,
   members: memberCases,
   hosts: hostCases,
+  behaviors,
 };
 writeFileSync(out, `${JSON.stringify(doc, null, 2)}\n`);
-console.log(`wrote ${out}: ${accepts.length} accept, ${stateCases.length} state, ${memberCases.length} member, ${hostCases.length} host cases`);
+console.log(`wrote ${out}: ${accepts.length} accept, ${stateCases.length} state, ${memberCases.length} member, ${hostCases.length} host cases, ${behaviors.length} behaviors`);

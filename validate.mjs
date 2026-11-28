@@ -1,8 +1,9 @@
-import { createHash, createHmac, createCipheriv, createDecipheriv, createPrivateKey, createPublicKey, diffieHellman, encapsulate, decapsulate, hkdfSync, generateKeyPairSync, sign as cryptoSign, verify as cryptoVerify } from 'node:crypto';
+import { createHash, createHmac, createCipheriv, createDecipheriv, createPrivateKey, createPublicKey, diffieHellman, encapsulate, decapsulate, hkdfSync, generateKeyPairSync, sign as cryptoSign, verify as cryptoVerify, timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 const sha384Of = (data) => createHash('sha384').update(data).digest();
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { ed25519PublicKey, edPublicToX25519, edSeedToX25519, x25519 } from './sealedbox.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -1462,9 +1463,57 @@ export function runDeviceRevocationValidation(v = vectorFile('pal3-v0.6-device-r
       if (got !== s.expectedError) fail(`${s.name}: expected ${s.expectedError}, got ${got}`);
     }
   }
+  // 11.3 item 5: device.revocation.push / .get (7.1), a model of the handler written from the text.
+  const callers = { owner: v.identity, other: v.otherIdentity };
+  const stmtName = (bytes) => Object.keys(v.statements).find((k) => v.statements[k] === hexOf(bytes));
+  for (const c of v.operations) {
+    const held = new Map();
+    const hold = (hexBytes, trust) => {
+      const r = checkStatement(hexBytes, trust);
+      if (r.error) return r;
+      const prev = held.get(r.digest);
+      if (!prev && c.maxIdentities && held.size >= c.maxIdentities) return { error: 'E_BUSY' };
+      if (!prev || prev.version < r.version) held.set(r.digest, { ...r, hex: hexBytes, edPkHex: trust.edPkHex });
+      return { applied: !prev || prev.version < r.version, version: held.get(r.digest).version };
+    };
+    for (const key of c.held) hold(v.statements[key], key === 'forOtherIdentity' ? v.otherIdentity : v.identity);
+    let got;
+    const caller = callers[c.caller];
+    const text = c.statementTextLength ? 'A'.repeat(c.statementTextLength) : c.body?.statement;
+    if (!c.callerIsPal) got = { error: 'E_PAL3_ACCESS_DENIED' };
+    else if (!c.storeConfigured) got = { error: 'E_PAL3_UNSUPPORTED_OP' };
+    else if (c.op === 'device.revocation.push') {
+      if (typeof text !== 'string' || text.length === 0 || text.length > 65536) got = { error: 'E_PAL3_INVALID_INPUT' };
+      else {
+        const trustedId = c.trustedForCaller === 'other' ? v.otherIdentity : caller;
+        if (identityDigest(trustedId) !== identityDigest(caller)) got = { error: 'E_PAL3_ACCESS_DENIED' };
+        else {
+          const r = hold(Buffer.from(text, 'base64').toString('hex'), trustedId);
+          got = r.error ? { error: r.error } : { ok: true, applied: r.applied, version: String(r.version) };
+        }
+      }
+    } else {
+      const wanted = c.body.identity;
+      if (wanted === undefined || wanted === null || wanted === '') got = { ok: true, statement: c.ownStatement };
+      else if (typeof wanted === 'string' && /^[0-9a-f]{64}$/.test(wanted)) {
+        const e = [...held.values()].find((x) => x.edPkHex === wanted);
+        got = { ok: true, statement: e ? stmtName(unhex(e.hex)) : null };
+      } else got = { error: 'E_PAL3_INVALID_INPUT' };
+    }
+    if (JSON.stringify(got) !== JSON.stringify(c.expected)) fail(`operation ${c.name}: expected ${JSON.stringify(c.expected)}, model ${JSON.stringify(got)}`);
+  }
+  if (v.operations.length < 20) fail('fewer than 20 operation cases');
+  // 11.3 item 7: a side may refuse a revocation_version lower than the one it already holds for the identity of the peer.
+  for (const c of v.handshakeRevocationVersion) {
+    let want = { refusedBy: null, error: null };
+    if (c.responderAdvertises < c.initiatorHolds) want = { refusedBy: 'initiator', error: 'E_PAL3_STALE_REVOCATION' };
+    else if (c.initiatorAdvertises < c.responderHolds) want = { refusedBy: 'responder', error: 'E_PAL3_STALE_REVOCATION' };
+    if (JSON.stringify(want) !== JSON.stringify(c.expected)) fail(`handshake ${c.name}: expected ${JSON.stringify(c.expected)}, model ${JSON.stringify(want)}`);
+  }
+  if (v.handshakeRevocationVersion.length < 6) fail('fewer than 6 handshake cases');
   const final = store.get(v.identity.digestHex);
   if (!final || String(final.version) !== v.finalStoredVersion || !final.revoked.has(v.deviceIds.A) || !final.revoked.has(v.deviceIds.B)) fail('final stored state');
-  return { ok: true, version: v.specVersion, certificates: v.certificates.length, negative: v.certificatesRejected.length, steps: v.receiverSequence.length, mldsaChecked: mldsaSupported() };
+  return { ok: true, version: v.specVersion, certificates: v.certificates.length, negative: v.certificatesRejected.length, steps: v.receiverSequence.length, operations: v.operations.length, handshake: v.handshakeRevocationVersion.length, mldsaChecked: mldsaSupported() };
 }
 
 // A.6 and 12.5 item 4: version and suite registry, the HELLO decision, capability tokens. No pal-core.
@@ -1570,8 +1619,23 @@ export function runPlaintextRecordValidation(v = vectorFile('pal3-v0.6-plaintext
       if (send !== s.senderMayUsePlaintext || receive !== s.receiverAcceptsPlaintext) fail(`${g.name} at ${s.atMs} ms: expected send ${s.senderMayUsePlaintext} receive ${s.receiverAcceptsPlaintext}, got ${send} ${receive}`);
     }
   }
+  // 6.2 Receiver: plaintext DATA is accepted only on a stream the receiver opened for a block or batch read, and only while
+  // plaintext records are accepted at all (direct path, or inside the 3 s drain window); trailing data of a cancelled or
+  // finished read is discarded, and every other plaintext record closes the session.
+  for (const c of v.streamRule) {
+    const left = c.pathChange ? c.pathChange.atMs : null;
+    const accepting = !c.pathChange || c.arrivalMs < left + c.drainWindowMs;
+    const verified = c.stream === 'blockRead' || c.stream === 'batchRead';
+    let want;
+    if (!accepting) want = { outcome: 'closed', error: 'E_PAL3_PLAINTEXT_FORBIDDEN' };
+    else if (verified && c.streamState === 'open') want = { outcome: 'delivered' };
+    else if (verified) want = { outcome: 'discarded' };
+    else want = { outcome: 'closed', error: 'E_PAL3_PLAINTEXT_FORBIDDEN' };
+    if (JSON.stringify(want) !== JSON.stringify(c.expected)) fail(`stream rule ${c.name}: expected ${JSON.stringify(want)}, got ${JSON.stringify(c.expected)}`);
+  }
+  if (v.streamRule.length < 12) fail('fewer than 12 stream rule scenarios');
   if (v.gate.length < 8) fail('fewer than 8 gate scenarios');
-  return { ok: true, version: v.specVersion, records: v.records.length, negative: v.rejected.length + v.sendSideRejected.length, gate: v.gate.length };
+  return { ok: true, version: v.specVersion, records: v.records.length, negative: v.rejected.length + v.sendSideRejected.length, gate: v.gate.length, streamRule: v.streamRule.length };
 }
 
 // 11.4: sealing to an identity and its devices, device lists, device-signed objects. Recomputed from node:crypto only.
@@ -1922,7 +1986,35 @@ export function runHardeningValidation(v = vectorFile('pal3-v0.6-hardening-vecto
       if (JSON.stringify(got[i]) !== JSON.stringify(want)) fail(`reassembly ${sc.name}, step ${i}: expected ${JSON.stringify(want).slice(0, 60)}, got ${JSON.stringify(got[i]).slice(0, 60)}`);
     });
   }
-  return { ok: true, version: v.specVersion, uri: v.uri.length, x25519: v.x25519.keys.length, mlkem: v.mlkem.cases.length, scenarios: v.reassembly.length, steps };
+  // Item 4: peer credit is clamped to 16 MiB (at the request and on every CREDIT); a block is sent whole, so a block goes out
+  // only when the credit covers it. A model of the responder: credit left, whole blocks sent, bounded by the file.
+  const LC = v.limits;
+  if (v.credit.length < 8) fail('fewer than 8 credit scenarios');
+  for (const c of v.credit) {
+    const totalBlocks = Math.ceil(c.fileBytes / LC.blockBytes);
+    let left = Math.max(0, Math.min(LC.maxPeerCreditBytes, Math.floor(c.requestCredit)));
+    let blocks = 0;
+    const got = [];
+    const pump = () => { const n = Math.min(Math.floor(left / LC.blockBytes), totalBlocks - blocks); blocks += n; left -= n * LC.blockBytes; got.push(Math.min(blocks * LC.blockBytes, c.fileBytes)); };
+    pump();
+    for (const g of c.creditMessages) { left = Math.min(LC.maxPeerCreditBytes, left + g); pump(); }
+    if (JSON.stringify(got) !== JSON.stringify(c.sentBytesAfterEachStep)) fail(`credit ${c.name}: expected ${JSON.stringify(got)}, got ${JSON.stringify(c.sentBytesAfterEachStep)}`);
+    if (c.sentBytesAfterEachStep.some((b) => b > LC.maxPeerCreditBytes * (1 + c.creditMessages.length))) fail(`credit ${c.name}: more than the clamp`);
+  }
+  if (!v.credit.some((c) => c.requestCredit > LC.maxPeerCreditBytes) || !v.credit.some((c) => c.creditMessages.some((g) => g > LC.maxPeerCreditBytes))) fail('credit scenarios must exceed the clamp in a request and in a CREDIT');
+  // Item 4: block ranges are whole numbers inside the file, start <= end.
+  if (v.ranges.length < 6) fail('fewer than 6 range cases');
+  for (const r of v.ranges) {
+    const valid = Number.isInteger(r.startBlock) && Number.isInteger(r.endBlock) && r.startBlock >= 0 && r.endBlock >= r.startBlock && r.endBlock < r.blockCount;
+    const want = valid ? 'accepted' : 'E_PAL3_INVALID_RANGE';
+    const got = r.expected.decision ?? r.expected.error;
+    if (got !== want || (!valid && r.expected.dataBytes !== 0)) fail(`range ${r.name}: expected ${want}, got ${got}`);
+    if (valid) {
+      const bytes = Math.min(r.fileBytes, (r.endBlock + 1) * LC.blockBytes) - r.startBlock * LC.blockBytes;
+      if (r.expected.dataBytes !== bytes) fail(`range ${r.name}: ${bytes} data bytes expected, got ${r.expected.dataBytes}`);
+    }
+  }
+  return { ok: true, version: v.specVersion, uri: v.uri.length, x25519: v.x25519.keys.length, mlkem: v.mlkem.cases.length, scenarios: v.reassembly.length, steps, credit: v.credit.length, ranges: v.ranges.length };
 }
 
 // 12.3 (a linter is not a boundary) and 12.4 (local limits refuse only with E_BUSY, never with a reason): written from the specification text.
@@ -1946,7 +2038,7 @@ export function runLocalPolicyValidation(v = vectorFile('pal3-v0.6-local-policy-
     if (v.analyzer.find((c) => c.name === needed)?.safe !== false) fail(`${needed} must be refused`);
   }
   if (v.analyzerBundled.safe !== true || !v.analyzerBundled.manifest.permissions.some((p) => p.startsWith('exec:'))) fail('a bundled extension that names exec: may import child_process');
-  const allowed = (granted, required) => granted.includes(required) || (!/^(?:exec|native):/.test(required) && granted.includes('*'));
+  const allowed = (granted, required) => granted.includes(required);
   for (const p of v.permissions) if (allowed(p.granted, p.required) !== p.allowed) fail(`permission ${p.name}`);
 
   const L = v.limits;
@@ -2058,6 +2150,10 @@ export function runPrivateNetworkAcceptValidation(v = vectorFile('pal3-v0.6-priv
   };
   // 13.4 items 1 and 4 and 13.1: the profile itself.
   const verifyProfile = (p, now) => {
+    if (p.networkId && p.networkNonce && p.networkCreatedAtMs != null && p.networkCreator) {
+      const at = Buffer.alloc(8); at.writeBigUInt64BE(BigInt(p.networkCreatedAtMs));
+      if (hexOf(sha384Of(Buffer.concat([Buffer.from('pal3-id-network-v1 ', 'latin1'), unhex(p.networkCreator), unhex(p.networkNonce), at]))) !== String(p.networkId).toLowerCase()) return 'E_PRIVATE_NETWORK_BAD_NETWORK_ID';
+    }
     if (!p.admin || !KEY_RE.test(p.admin) || !p.signature || !p.issuedAt) return 'E_PRIVATE_NETWORK_UNSIGNED';
     if (!DATE_RE.test(String(p.expiresAt)) || Number.isNaN(Date.parse(p.expiresAt))) return 'E_PRIVATE_NETWORK_BAD_DATE';
     if (!edVerify(signedBytes(p), p.signature, p.admin)) return 'E_PRIVATE_NETWORK_BAD_SIGNATURE';
@@ -2128,7 +2224,18 @@ export function runPrivateNetworkAcceptValidation(v = vectorFile('pal3-v0.6-priv
     const got = Boolean(u && (listed.has(u.host.toLowerCase()) || names.has(u.hostname.toLowerCase().replace(/^\[|\]$/g, ''))));
     if (got !== c.allowed) fail(`host ${c.name}`);
   }
-  return { ok: true, version: v.specVersion, accept: v.accept.length, state: v.state.length, members: v.members.length, hosts: v.hosts.length };
+  // 13.5: no public DHT and no public bootstrap list while a profile is active (or in lockdown); an edited stored profile does not widen access.
+  if (v.behaviors.length < 5) fail('fewer than 5 behavior cases');
+  for (const b of v.behaviors) {
+    let want;
+    if (b.operation === 'startPublicDht') want = { decision: 'refused' };
+    else if (b.operation === 'discoveryServers') want = { servers: b.profile === 'lockdown' ? [] : profile.discoveryServers };
+    else if (b.operation === 'isMemberAllowed') want = { allowed: false };
+    else fail(`behavior ${b.name}: unknown operation`);
+    if (JSON.stringify(want) !== JSON.stringify(b.expected)) fail(`behavior ${b.name}: expected ${JSON.stringify(want)}, got ${JSON.stringify(b.expected)}`);
+    if (b.edit && (b.edit.resigned !== false || b.afterMs > 60000 || profile.members.some((m) => m.publicKey === b.publicKey))) fail(`behavior ${b.name}: the edit must be unsigned, checked within 60 s, adding a key that is no member`);
+  }
+  return { ok: true, version: v.specVersion, accept: v.accept.length, state: v.state.length, members: v.members.length, hosts: v.hosts.length, behaviors: v.behaviors.length };
 }
 
 // 14.3: peer exchange without addresses, a model written from the specification text.
@@ -2182,10 +2289,115 @@ export function runPexValidation(v = vectorFile('pal3-v0.6-pex-vectors.json')) {
   return { ok: true, version: v.specVersion, receive: v.receive.length, responded: r.response.peers.length };
 }
 
+// 14.1, 14.2, 14.4, 14.11: path policy, address handling, address-free records and product boundaries, a model written from the specification text.
+export function runTransportPolicyValidation(v = vectorFile('pal3-v0.6-transport-policy-vectors.json')) {
+  const fail = (m) => { throw new Error(`transport policy vectors (14.1, 14.2, 14.4, 14.11): ${m}`); };
+  const sameList = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const relayMayCarry = (c, everyDirectFailed) => c.relayOperatorEnabled && c.peerOptedIn && (everyDirectFailed || c.userChoseRelay);
+  const decidePath = (c) => {
+    const udp = c.transport === 'udp';
+    const browser = c.browserLinkedToOwnDevice === true && c.transport === 'websocket';
+    if (!udp && !browser) return { decision: 'E_TRANSPORT_NOT_PERMITTED', triedMethods: [] };
+    if (c.userChoseRelay) return { decision: relayMayCarry(c, false) ? 'relayed' : 'E_PAL3_UNREACHABLE', triedMethods: [] };
+    const tried = [];
+    for (const m of c.methods) {
+      tried.push(m.name);
+      if (m.ok) return { decision: 'direct', triedMethods: tried };
+    }
+    return { decision: relayMayCarry(c, true) ? 'relayed' : 'E_PAL3_UNREACHABLE', triedMethods: tried };
+  };
+  if (v.pathPolicy.length < 12) fail('fewer than 12 path cases');
+  for (const c of v.pathPolicy) {
+    const got = decidePath(c.input);
+    if (got.decision !== c.expected.decision || !sameList(got.triedMethods, c.expected.triedMethods)) fail(`path ${c.name}: expected ${c.expected.decision}, model gives ${got.decision}`);
+  }
+  for (const n of ['carryingIsNeverTheDefault', 'tcpIsNotACoreTransport', 'browserLinkedToOwnDeviceMayUseABrowserTransport', 'directBeatsEnabledRelay']) if (!v.pathPolicy.some((c) => c.name === n)) fail(`path case ${n} is required`);
+  for (const c of v.relayRole) {
+    const got = c.action === 'introduce' ? true : relayMayCarry(c, c.afterEveryDirectMethodFailed);
+    if (got !== c.allowed) fail(`relay ${c.name}`);
+  }
+
+  const SINKS = { transportShortLivedState: true, introducedPeerWithinIntroduction: true };
+  for (const c of v.addressHandling) {
+    if ((SINKS[c.sink] === true) !== c.allowed) fail(`address handling ${c.name}`);
+  }
+  for (const c of v.introduction) {
+    const receives = {};
+    for (const p of [...c.introduced, ...c.bystanders]) receives[p] = [];
+    for (const p of c.introduced) receives[p] = c.introduced.filter((q) => q !== p);
+    if (JSON.stringify(receives) !== JSON.stringify(c.expected.receivesAddressOf)) fail(`introduction ${c.name}: who receives an address`);
+    if (!sameList(c.introduced, c.expected.introducerLearns) || c.expected.introducerSeesTraffic !== false) fail(`introduction ${c.name}: what the introducer learns`);
+  }
+
+  const bannedField = new Set(['address', 'longTermPublicKey', 'handle', 'name']);
+  for (const c of v.records) {
+    const signed = c.kind === 'dhtRecord:m' || c.kind === 'dhtRecord:i';
+    const ok = signed ? c.carries.every((f) => f === 'longTermPublicKey') && c.publicContent === true : !c.carries.some((f) => bannedField.has(f));
+    if (ok !== c.allowed) fail(`record ${c.name}`);
+  }
+  const publicUses = new Set(['publicShareIndex']);
+  for (const c of v.signedRecordUse) if ((publicUses.has(c.use) && c.ownerMadeItPublic) !== c.allowed) fail(`signed record use ${c.name}`);
+  for (const c of v.rendezvous) if ((c.method === 'pairMailbox') !== c.allowed) fail(`rendezvous ${c.name}`);
+  for (const c of v.unlinkability) {
+    const links = c.pairs.some((p) => p.learns !== 'address');
+    if (links !== c.linksAddressToIdentity || links === c.allowed) fail(`unlinkability ${c.name}`);
+  }
+
+  const internal = /^@hn2\/protocol(\/|$)/;
+  for (const c of v.importPaths) {
+    const ok = !internal.test(c.module) || c.importer === 'transportAdapter';
+    if (ok !== c.allowed) fail(`import ${c.name}`);
+  }
+  const forbidden = new Set(v.limits.forbiddenFieldNames);
+  if (forbidden.size !== 11) fail('eleven transient endpoint field names are listed');
+  for (const c of v.productSurfaces) {
+    const endpoint = c.fields.some((f) => forbidden.has(f));
+    const keyOk = !c.fields.includes('identityKey') || c.verifiesSignature === true;
+    const ok = c.surface === 'transportCarrier' ? true : !endpoint && keyOk;
+    if (ok !== c.allowed) fail(`surface ${c.name}`);
+  }
+  const ID = /^[0-9a-f]{96}$/;
+  for (const c of v.peerIdentifiers) if (ID.test(c.value) !== c.valid) fail(`peer identifier ${c.name}`);
+  for (const c of v.nativeCarriers) {
+    const ok = c.carrier === 'C2' || (c.carrier === 'C1' && c.enableIceTcp === false);
+    if (ok !== c.allowed) fail(`carrier ${c.name}`);
+  }
+  for (const c of v.localControl) {
+    const ok = (c.channel === 'unixDomainSocket' || c.channel === 'windowsNamedPipe') && c.framed === true;
+    if (ok !== c.allowed) fail(`local control ${c.name}`);
+  }
+  return { ok: true, version: v.specVersion, path: v.pathPolicy.length, address: v.addressHandling.length, records: v.records.length, boundary: v.importPaths.length + v.productSurfaces.length + v.nativeCarriers.length + v.localControl.length };
+}
+
+export function runEnrollmentBindingValidation(v = vectorFile('pal3-v0.6-enrollment-binding-vectors.json')) {
+  const fail = (m) => { throw new Error(`enrollment and caller binding vectors (11.3 item 2, 11.2 item 2): ${m}`); };
+  const decideEnrollment = (c) => {
+    if (c.deviceIdSource === 'derivedFromIdentityKey') return { action: 'reject', reason: 'deviceIdDerivedFromIdentity' };
+    if (!c.identitySecretKeyPresent) return c.form === 'delegated' && c.expiresAtMs - c.nowMs > c.renewWindowMs ? { action: 'none', reason: 'notDueForRenewal' } : { action: 'none', reason: 'needsPairingIssuedCertificate' };
+    if (c.form === 'selfCertified') return { action: 'enroll', newDeviceKeys: true, deviceIdSource: 'random16', certFlags: 0, keepsDeviceId: true };
+    if (c.expiresAtMs - c.nowMs > c.renewWindowMs) return { action: 'none', reason: 'notDueForRenewal' };
+    return { action: 'renew', newDeviceKeys: false, deviceIdSource: 'unchanged', certFlags: 0, keepsDeviceId: true };
+  };
+  for (const c of v.enrollment) if (JSON.stringify(decideEnrollment(c.input)) !== JSON.stringify(c.expected)) fail(`enrollment ${c.name}`);
+  for (const n of ['selfCertifiedEnrollsOnFirstLoad', 'delegatedBeforeExpiryRenewsWithSameDeviceId', 'deviceIdMustNotBeDerivedFromTheIdentityKey']) if (!v.enrollment.some((c) => c.name === n)) fail(`missing enrollment case ${n}`);
+  for (const c of v.receiverForms) {
+    const accept = !(c.input.form === 'selfCertified' && c.input.revocationStatementHeld);
+    if (accept !== c.expected.accept || (!accept && c.expected.error !== 'E_PAL3_DEVICE_REVOKED')) fail(`receiver form ${c.name}`);
+  }
+  for (const c of v.callerBinding) {
+    const i = c.input;
+    const allowed = i.certificateVerified === true && i.verifiedCertificateIdentity !== null && (i.claimedIdentity === null || i.claimedIdentity === i.verifiedCertificateIdentity);
+    if (allowed !== c.expected.allowed) fail(`caller binding ${c.name}`);
+    if (allowed && i.claimedIdentity === null && c.expected.actsAs !== i.verifiedCertificateIdentity) fail(`caller binding ${c.name}: actsAs`);
+  }
+  return { enrollment: v.enrollment.length, receiverForms: v.receiverForms.length, callerBinding: v.callerBinding.length };
+}
+
 // 4.1: N1 and N3 address rules, the N3 observation table, buddy.intro start times and the N6 relay reservation, written from the specification text.
 export function runNatTraversalValidation(v = vectorFile('pal3-v0.6-nat-traversal-vectors.json')) {
   const fail = (m) => { throw new Error(`nat traversal vectors (4.1): ${m}`); };
   const L = v.limits;
+  const L_DHT = v.dhtLimits;
   // IP classification.
   const parseIp = (raw) => {
     let s = String(raw).trim().toLowerCase();
@@ -2313,7 +2525,479 @@ export function runNatTraversalValidation(v = vectorFile('pal3-v0.6-nat-traversa
     }
     if (JSON.stringify(got) !== JSON.stringify(s.expected)) fail(`quota at ${s.atMs} ms for ${s.bytes} bytes: expected ${JSON.stringify(s.expected)}, got ${JSON.stringify(got)}`);
   }
-  return { ok: true, version: v.specVersion, addresses: v.addresses.length, scenarios: v.observations.length, punch: v.punchPlans.length, reservations: R.reservations.length };
+  // N4: probes are paced at 20 ms or slower, which is at most 50 probes per second.
+  if (v.punchPacing.length < 6) fail('fewer than 6 pacing cases');
+  for (const c of v.punchPacing) {
+    const n = Number(c.requestedMs === 'NaN' ? Number.NaN : c.requestedMs);
+    const want = Number.isFinite(n) ? Math.max(L_DHT.minPunchIntervalMs, n) : L_DHT.minPunchIntervalMs;
+    if (c.effectiveMs !== want || c.probesPerSecondAtMost > 50 || c.probesPerSecondAtMost !== 1000 / c.effectiveMs) fail(`pacing of ${c.requestedMs}: expected ${want} ms`);
+  }
+  // N5: at most 64 ports, each one a usable unprivileged port, none twice.
+  if (v.portPrediction.length < 6) fail('fewer than 6 port prediction cases');
+  for (const c of v.portPrediction) {
+    const cap = Math.max(1, Math.min(L_DHT.maxPorts, c.maxPorts ?? L_DHT.maxPorts));
+    if (c.ports.length < 1 || c.ports.length > cap || new Set(c.ports).size !== c.ports.length || c.ports.some((p) => !Number.isInteger(p) || p < 1024 || p > 65535)) fail(`port prediction ${c.name}: ${c.ports.length} ports, bound ${cap}`);
+  }
+  // N3, PAL-DHT: the node leaves read-only mode when 3 distinct reporter prefixes report the same address.
+  if (v.dhtExternalAddress.length < 12) fail('fewer than 12 DHT scenarios');
+  const dhtPrefix = (raw) => { const p = parseIp(raw); return p.family === 4 ? p.o.slice(0, 2).join('.') : `v6:${p.g.slice(0, 3).join(':')}`; };
+  const canonical = (raw) => JSON.stringify(parseIp(raw));
+  for (const sc of v.dhtExternalAddress) {
+    const table = new Map();
+    let confirmed = null;
+    for (const st of sc.steps) {
+      if (!confirmed) {
+        table.delete(dhtPrefix(st.reporterIp));
+        if (table.size >= L_DHT.maxEntries) table.delete(table.keys().next().value);
+        table.set(dhtPrefix(st.reporterIp), { address: canonical(st.reportedIp), raw: st.reportedIp, at: st.atMs });
+        const votes = new Map();
+        for (const [k, e] of table) {
+          if (st.atMs - e.at >= L_DHT.ttlMs) continue;
+          if (!votes.has(e.address)) votes.set(e.address, { raw: e.raw, prefixes: new Set() });
+          votes.get(e.address).prefixes.add(k);
+        }
+        const exempt = !globalUnicast(st.reportedIp) && !globalUnicast(st.reporterIp);
+        for (const [, vote] of votes) {
+          if (vote.prefixes.size >= L_DHT.quorumPrefixes || exempt) { confirmed = vote.raw; break; }
+        }
+      }
+      const want = { readOnly: !confirmed, externalIp: confirmed };
+      const same = want.readOnly === st.readOnly && (want.externalIp === null ? st.externalIp === null : st.externalIp !== null && canonical(st.externalIp) === canonical(want.externalIp));
+      if (!same) fail(`DHT scenario ${sc.name} at ${st.atMs} ms: expected ${JSON.stringify(want)}, got readOnly ${st.readOnly} externalIp ${st.externalIp}`);
+    }
+  }
+  return { ok: true, version: v.specVersion, addresses: v.addresses.length, scenarios: v.observations.length, punch: v.punchPlans.length, reservations: R.reservations.length, dht: v.dhtExternalAddress.length, pacing: v.punchPacing.length, ports: v.portPrediction.length };
+}
+
+function verifyDirectHybridBytes({ bytes, edPkHex, dsaPkHex, sigEdHex, sigDsaHex, dsaContext, mldsa = mldsaSupported() }) {
+  const edKey = createPublicKey({ key: Buffer.concat([ED25519_SPKI_PREFIX, unhex(edPkHex)]), format: 'der', type: 'spki' });
+  if (!cryptoVerify(null, bytes, edKey, unhex(sigEdHex))) return false;
+  if (!mldsa) return true;
+  const dsaKey = createPublicKey({ key: Buffer.concat([MLDSA65_SPKI_PREFIX, unhex(dsaPkHex)]), format: 'der', type: 'spki' });
+  return cryptoVerify(null, bytes, { key: dsaKey, context: Buffer.from(dsaContext, 'ascii') }, unhex(sigDsaHex));
+}
+
+const isLowerHex = (s, len) => typeof s === 'string' && s.length === len && /^[0-9a-f]+$/.test(s);
+
+// §13.1-13.3: hybrid v4 private network profile and v2 handover (with legacy v3/v1 transition and no-downgrade enforcement).
+export function runPrivateNetworkHybridValidation(v = vectorFile('pal3-v0.6-private-network-vectors.json')) {
+  const fail = (m) => { throw new Error(`private-network-hybrid vector: ${m}`); };
+  const mldsa = mldsaSupported();
+
+  const buildV3Bytes = (o) => Buffer.from('palexplorer-private-network-v3\n' + JSON.stringify({
+    name: o.name, admin: o.admin, discoveryServers: o.discoveryServers, relays: o.relays,
+    members: o.members.map((m) => ({ publicKey: m.publicKey, name: m.name ?? null, revoked: m.revoked })),
+    privacyMode: o.privacyMode, issuedAt: o.issuedAt, version: o.version, expiresAt: o.expiresAt,
+    networkId: o.networkId ?? null, networkCreator: o.networkCreator ?? null, networkNonce: o.networkNonce ?? null, networkCreatedAtMs: o.networkCreatedAtMs ?? null,
+  }), 'utf8');
+
+  const buildV4Bytes = (o) => Buffer.from('palexplorer-private-network-v4\n' + JSON.stringify({
+    name: o.name, admin: o.admin, adminDsaPublicKey: o.adminDsaPublicKey, discoveryServers: o.discoveryServers, relays: o.relays,
+    members: o.members.map((m) => ({ publicKey: m.publicKey, dsaPublicKey: m.dsaPublicKey ?? null, name: m.name ?? null, revoked: m.revoked })),
+    privacyMode: o.privacyMode, issuedAt: o.issuedAt, version: o.version, expiresAt: o.expiresAt,
+    networkId: o.networkId ?? null, networkCreator: o.networkCreator ?? null, networkNonce: o.networkNonce ?? null, networkCreatedAtMs: o.networkCreatedAtMs ?? null,
+  }), 'utf8');
+
+  const buildH1Bytes = (o) => Buffer.from('palexplorer-private-network-handover-v1\n' + JSON.stringify({
+    name: o.name, from: o.from, to: o.to, issuedAt: o.issuedAt, expiresAt: o.expiresAt,
+  }), 'utf8');
+
+  const buildH2Bytes = (o) => Buffer.from('palexplorer-private-network-handover-v2\n' + JSON.stringify({
+    name: o.name, from: o.from, fromDsaPublicKey: o.fromDsaPublicKey, to: o.to, toDsaPublicKey: o.toDsaPublicKey, issuedAt: o.issuedAt, expiresAt: o.expiresAt,
+  }), 'utf8');
+
+  const verifyProfile = (o, { priorV4Accepted = false } = {}) => {
+    const hasDsaKey = o.adminDsaPublicKey !== undefined;
+    const hasDsaSig = o.signatureMldsa65 !== undefined;
+    if (hasDsaKey !== hasDsaSig) return 'E_PRIVATE_NETWORK_UNSIGNED';
+    if (!hasDsaKey) {
+      if (priorV4Accepted) return 'E_PRIVATE_NETWORK_DOWNGRADE';
+      if (!isLowerHex(o.admin, 64) || !isLowerHex(o.signature, 128)) return 'E_PRIVATE_NETWORK_INVALID';
+      const edKey = createPublicKey({ key: Buffer.concat([ED25519_SPKI_PREFIX, unhex(o.admin)]), format: 'der', type: 'spki' });
+      return cryptoVerify(null, buildV3Bytes(o), edKey, unhex(o.signature)) ? 'accepted' : 'E_PRIVATE_NETWORK_BAD_SIGNATURE';
+    }
+    if (!isLowerHex(o.admin, 64) || !isLowerHex(o.adminDsaPublicKey, 3904) || !isLowerHex(o.signature, 128) || !isLowerHex(o.signatureMldsa65, 6618)) {
+      return 'E_PRIVATE_NETWORK_INVALID';
+    }
+    for (const m of o.members || []) {
+      if (!isLowerHex(m.publicKey, 64)) return 'E_PRIVATE_NETWORK_INVALID';
+      if (!m.revoked && !isLowerHex(m.dsaPublicKey, 3904)) return 'E_PRIVATE_NETWORK_INVALID';
+      if (m.revoked && m.dsaPublicKey !== null && !isLowerHex(m.dsaPublicKey, 3904)) return 'E_PRIVATE_NETWORK_INVALID';
+    }
+    let ok = false;
+    try {
+      ok = verifyDirectHybridBytes({
+        bytes: buildV4Bytes(o),
+        edPkHex: o.admin,
+        dsaPkHex: o.adminDsaPublicKey,
+        sigEdHex: o.signature,
+        sigDsaHex: o.signatureMldsa65,
+        dsaContext: 'palexplorer-private-network-v4',
+        mldsa,
+      });
+    } catch { ok = false; }
+    return ok ? 'accepted' : 'E_PRIVATE_NETWORK_BAD_SIGNATURE';
+  };
+
+  const verifyHandover = (o, { priorV4Accepted = false } = {}) => {
+    const hasHybrid = o.fromDsaPublicKey !== undefined || o.toDsaPublicKey !== undefined || o.signatureMldsa65 !== undefined;
+    if (!hasHybrid) {
+      if (priorV4Accepted) return 'E_PRIVATE_NETWORK_DOWNGRADE';
+      if (!isLowerHex(o.from, 64) || !isLowerHex(o.to, 64) || !isLowerHex(o.signature, 128)) return 'E_PRIVATE_NETWORK_INVALID';
+      const edKey = createPublicKey({ key: Buffer.concat([ED25519_SPKI_PREFIX, unhex(o.from)]), format: 'der', type: 'spki' });
+      return cryptoVerify(null, buildH1Bytes(o), edKey, unhex(o.signature)) ? 'accepted' : 'E_PRIVATE_NETWORK_BAD_SIGNATURE';
+    }
+    if (!isLowerHex(o.from, 64) || !isLowerHex(o.fromDsaPublicKey, 3904) || !isLowerHex(o.to, 64) || !isLowerHex(o.toDsaPublicKey, 3904) || !isLowerHex(o.signature, 128) || !isLowerHex(o.signatureMldsa65, 6618)) {
+      return 'E_PRIVATE_NETWORK_INVALID';
+    }
+    if (Date.parse(o.expiresAt) - Date.parse(o.issuedAt) > 30 * 24 * 3600 * 1000) return 'E_PRIVATE_NETWORK_BAD_VALIDITY';
+    if (o.from === o.to && o.fromDsaPublicKey === o.toDsaPublicKey) return 'E_PRIVATE_NETWORK_HANDOVER';
+    let ok = false;
+    try {
+      ok = verifyDirectHybridBytes({
+        bytes: buildH2Bytes(o),
+        edPkHex: o.from,
+        dsaPkHex: o.fromDsaPublicKey,
+        sigEdHex: o.signature,
+        sigDsaHex: o.signatureMldsa65,
+        dsaContext: 'palexplorer-private-network-handover-v2',
+        mldsa,
+      });
+    } catch { ok = false; }
+    return ok ? 'accepted' : 'E_PRIVATE_NETWORK_BAD_SIGNATURE';
+  };
+
+  if (verifyProfile(v.profile.object) !== 'accepted') fail('legacy v3 profile did not verify');
+  if (verifyHandover(v.handover.object) !== 'accepted') fail('legacy v1 handover did not verify');
+
+  const p4 = v.profileV4;
+  const p4Bytes = buildV4Bytes(p4.object);
+  if (p4Bytes.toString('utf8') !== p4.signedBytesUtf8 || p4Bytes.toString('hex') !== p4.signedBytesHex) fail('profileV4 signed bytes mismatch');
+  if (computeIdentityDigest(p4.object.admin, p4.object.adminDsaPublicKey) !== p4.adminIdentityPinHex) fail('profileV4 admin identity pin mismatch');
+  if (verifyProfile(p4.object) !== 'accepted') fail('profileV4 failed verification');
+
+  const h2 = v.handoverV2;
+  const h2Bytes = buildH2Bytes(h2.object);
+  if (h2Bytes.toString('utf8') !== h2.signedBytesUtf8 || h2Bytes.toString('hex') !== h2.signedBytesHex) fail('handoverV2 signed bytes mismatch');
+  if (verifyHandover(h2.object, { priorV4Accepted: true }) !== 'accepted') fail('handoverV2 failed verification');
+  const successor = p4.object.members.find((m) => m.publicKey === h2.object.to && m.dsaPublicKey === h2.object.toDsaPublicKey && !m.revoked);
+  if (!successor) fail('handoverV2 successor must be an unrevoked member in profileV4');
+
+  if (!Array.isArray(v.hybridRejected) || v.hybridRejected.length < 8) fail('fewer than 8 hybridRejected cases');
+  for (const c of v.hybridRejected) {
+    const got = c.kind === 'handover'
+      ? verifyHandover(c.object, { priorV4Accepted: c.priorV4Accepted })
+      : verifyProfile(c.object, { priorV4Accepted: c.priorV4Accepted });
+    if (got !== c.expectedError) fail(`hybridRejected ${c.name}: expected ${c.expectedError}, got ${got}`);
+  }
+  return { ok: true, version: v.specVersion, rejected: v.hybridRejected.length, mldsaChecked: mldsa };
+}
+
+// §14.6: mailbox location key and hybrid Ed25519+ML-DSA-65 mailbox blob v2.
+export function runMailboxV2Validation(v = vectorFile('pal3-v0.6-transport-vectors.json')) {
+  const fail = (m) => { throw new Error(`mailbox-v2 vector: ${m}`); };
+  const mldsa = mldsaSupported();
+  const MAX_V2 = 24576;
+
+  const loc = v.mailboxLocationKey;
+  if (loc.dayIndex !== Math.floor(loc.unixSeconds / 86400)) fail('mailbox location dayIndex mismatch');
+  if (hexOf(sha384Of(Buffer.from(loc.inputUtf8, 'utf8'))) !== loc.locationKeyHex) fail('mailbox location SHA-384 mismatch');
+
+  const buildBlobV2Bytes = (o) => Buffer.from('palexplorer-mailbox-v2\n' + JSON.stringify({
+    v: o.v, from: o.from, fromDsaPublicKey: o.fromDsaPublicKey, timestamp: o.timestamp, payload: o.payload,
+  }), 'utf8');
+
+  const verifyBlob = ({ object: o, expectedSenderPinHex, palV2Capable = true }) => {
+    if (o.v === 1) {
+      if (palV2Capable) return 'E_MAILBOX_DOWNGRADE';
+      if (Buffer.byteLength(JSON.stringify(o), 'utf8') > 16384) return 'E_MESSAGE_TOO_LARGE';
+      const bytes = Buffer.from('palexplorer-mailbox-v1\n' + JSON.stringify({ v: o.v, from: o.from, timestamp: o.timestamp, payload: o.payload }), 'utf8');
+      const edKey = createPublicKey({ key: Buffer.concat([ED25519_SPKI_PREFIX, unhex(o.from)]), format: 'der', type: 'spki' });
+      return cryptoVerify(null, bytes, edKey, unhex(o.signature)) ? 'accepted' : 'E_MAILBOX_BAD_SIGNATURE';
+    }
+    if (o.v !== 2) return 'E_MAILBOX_BAD_SIGNATURE';
+    if (Buffer.byteLength(JSON.stringify(o), 'utf8') > MAX_V2) return 'E_MESSAGE_TOO_LARGE';
+    if (!isLowerHex(o.from, 64) || !isLowerHex(o.fromDsaPublicKey, 3904) || !isLowerHex(o.signature, 128) || !isLowerHex(o.signatureMldsa65, 6618)) {
+      return 'E_MAILBOX_BAD_SIGNATURE';
+    }
+    let ok = false;
+    try {
+      ok = verifyDirectHybridBytes({
+        bytes: buildBlobV2Bytes(o),
+        edPkHex: o.from,
+        dsaPkHex: o.fromDsaPublicKey,
+        sigEdHex: o.signature,
+        sigDsaHex: o.signatureMldsa65,
+        dsaContext: 'palexplorer-mailbox-v2',
+        mldsa,
+      });
+    } catch { ok = false; }
+    if (!ok) return 'E_MAILBOX_BAD_SIGNATURE';
+    if (computeIdentityDigest(o.from, o.fromDsaPublicKey) !== expectedSenderPinHex) return 'E_MAILBOX_IDENTITY_MISMATCH';
+    return 'accepted';
+  };
+
+  const b2 = v.mailboxBlobV2;
+  const b2Bytes = buildBlobV2Bytes(b2.object);
+  if (b2Bytes.toString('utf8') !== b2.signedBytesUtf8 || b2Bytes.toString('hex') !== b2.signedBytesHex) fail('mailboxBlobV2 signed bytes mismatch');
+  if (Buffer.byteLength(JSON.stringify(b2.object), 'utf8') !== b2.serializedBytes || b2.serializedBytes > MAX_V2) fail('mailboxBlobV2 serialized size mismatch');
+  if (verifyBlob({ object: b2.object, expectedSenderPinHex: b2.sender.identityPinHex, palV2Capable: true }) !== 'accepted') fail('mailboxBlobV2 failed verification');
+
+  if (!Array.isArray(v.mailboxBlobV2Rejected) || v.mailboxBlobV2Rejected.length < 7) fail('fewer than 7 mailboxBlobV2Rejected cases');
+  for (const c of v.mailboxBlobV2Rejected) {
+    const got = verifyBlob(c);
+    if (got !== c.expectedError) fail(`mailboxBlobV2Rejected ${c.name}: expected ${c.expectedError}, got ${got}`);
+  }
+  return { ok: true, version: v.specVersion, rejected: v.mailboxBlobV2Rejected.length, mldsaChecked: mldsa };
+}
+
+// §15.9: Sphinx-style header-blinded multi-hop relay cells (onion/3).
+export function runOnion3Validation(v = vectorFile('pal3-v0.6-onion3-vectors.json')) {
+  const fail = (m) => { throw new Error(`onion3 vector: ${m}`); };
+  const ALPHA = 32;
+  const HOP_SLOT = 49;
+  const BETA_LEN = 147;
+  const MAC_LEN = 16;
+  const HEADER_LEN = 195;
+
+  if (v.capability !== 'onion/3') fail('capability must be onion/3');
+  for (const s of v.sizes) {
+    if (s.headerBytes !== HEADER_LEN || s.deltaBytes !== s.cellSize - HEADER_LEN || s.capacity !== s.cellSize - 197 || s.fragmentDataBytes !== s.cellSize - 209) {
+      fail(`size table mismatch for cellSize ${s.cellSize}`);
+    }
+  }
+
+  const xorBuf = (a, b) => {
+    const out = Buffer.alloc(a.length);
+    for (let i = 0; i < a.length; i++) out[i] = a[i] ^ b[i];
+    return out;
+  };
+  const stream = (key, len) => createCipheriv('chacha20', key, Buffer.alloc(16)).update(Buffer.alloc(len));
+  const macOf = (mu, a, b, d) => createHmac('sha384', mu).update(Buffer.concat([a, b, d])).digest().subarray(0, MAC_LEN);
+
+  const processHop = (cell, relaySeed, seenReplayKeys = new Set()) => {
+    if (cell.length < 512 || cell.length > 2048) return { error: 'E_ONION_INVALID' };
+    const alpha = cell.subarray(0, ALPHA);
+    const beta = cell.subarray(ALPHA, ALPHA + BETA_LEN);
+    const gamma = cell.subarray(ALPHA + BETA_LEN, HEADER_LEN);
+    const delta = cell.subarray(HEADER_LEN);
+    const relayPk = ed25519PublicKey(relaySeed);
+    const R = edPublicToX25519(relayPk);
+    const r = edSeedToX25519(relaySeed);
+    let s;
+    try { s = x25519(r, alpha); } catch { return { error: 'E_ONION_INVALID' }; }
+    if (s.every((byte) => byte === 0)) return { error: 'E_ONION_INVALID' };
+    const salt = Buffer.concat([alpha, R]);
+    const hkdf = (info) => Buffer.from(hkdfSync('sha384', s, salt, Buffer.from(info, 'ascii'), 32));
+    const rho = hkdf('pal3-onion3-rho-v1');
+    const mu = hkdf('pal3-onion3-mu-v1');
+    const pi = hkdf('pal3-onion3-pi-v1');
+    const b = hkdf('pal3-onion3-blind-v1');
+    const replayKey = sha384Of(Buffer.concat([Buffer.from('pal3-onion3-replay-v1', 'ascii'), Buffer.from([0x00]), alpha, R, s]));
+    const replayHex = hexOf(replayKey);
+    if (seenReplayKeys.has(replayHex)) return { error: 'E_REPLAY' };
+    const expectedGamma = macOf(mu, alpha, beta, delta);
+    if (!timingSafeEqual(gamma, expectedGamma)) return { error: 'E_UNAUTHORIZED' };
+    seenReplayKeys.add(replayHex);
+    const B = xorBuf(Buffer.concat([beta, Buffer.alloc(HOP_SLOT)]), stream(rho, BETA_LEN + HOP_SLOT));
+    const hopType = B[0];
+    const nextHop = B.subarray(1, 33);
+    const nextMac = B.subarray(33, 49);
+    const nextBeta = B.subarray(49, 49 + BETA_LEN);
+    const nextDelta = xorBuf(delta, stream(pi, delta.length));
+    if (hopType === 0x01) {
+      let nextAlpha;
+      try { nextAlpha = x25519(b, alpha); } catch { return { error: 'E_ONION_INVALID' }; }
+      if (nextAlpha.every((byte) => byte === 0)) return { error: 'E_ONION_INVALID' };
+      return { ok: true, hopType, nextHop, forwardedCell: Buffer.concat([nextAlpha, nextBeta, nextMac, nextDelta]), s, rho, mu, pi, b, replayKey };
+    }
+    if (hopType === 0x02) {
+      const len = nextDelta.readUInt16BE(0);
+      if (len > nextDelta.length - 2) return { error: 'E_ONION_INVALID' };
+      return { ok: true, hopType, nextHop, payloadField: nextDelta, payload: nextDelta.subarray(2, 2 + len), s, rho, mu, pi, b, replayKey };
+    }
+    return { error: 'E_ONION_INVALID' };
+  };
+
+  let verifiedHops = 0;
+  for (const [label, cellCase] of [['threeHopCell', v.threeHopCell], ['twoHopCell', v.twoHopCell], ['oneHopCell', v.oneHopCell]]) {
+    let curWire = unhex(cellCase.hops[0].cellHex);
+    for (let i = 0; i < cellCase.hops.length; i++) {
+      const hop = cellCase.hops[i];
+      if (curWire.length !== cellCase.cellSize) fail(`${label} hop ${i}: cell size mismatch`);
+      if (hexOf(curWire) !== hop.cellHex) fail(`${label} hop ${i}: wire cell mismatch`);
+      const res = processHop(curWire, unhex(hop.relaySeedHex));
+      if (!res.ok) fail(`${label} hop ${i}: unexpected error ${res.error}`);
+      if (hexOf(res.s) !== hop.sharedSecretHex || hexOf(res.rho) !== hop.rhoHex || hexOf(res.mu) !== hop.muHex || hexOf(res.pi) !== hop.piHex || hexOf(res.b) !== hop.blindScalarHex || hexOf(res.replayKey) !== hop.replayKeyHex) {
+        fail(`${label} hop ${i}: derived key material mismatch`);
+      }
+      if (res.hopType !== hop.hopType || hexOf(res.nextHop) !== hop.nextPublicKeyHex) fail(`${label} hop ${i}: routing mismatch`);
+      if (i < cellCase.hops.length - 1) {
+        if (hexOf(res.forwardedCell) !== hop.forwardedCellHex) fail(`${label} hop ${i}: forwarded cell mismatch`);
+        curWire = res.forwardedCell;
+      } else {
+        if (hexOf(res.nextHop) !== cellCase.destinationPublicKeyHex) fail(`${label}: destination mismatch`);
+        if (hexOf(res.payloadField) !== cellCase.payloadFieldHex || hexOf(res.payload) !== cellCase.payloadHex) fail(`${label}: payload mismatch`);
+      }
+      verifiedHops++;
+    }
+  }
+
+  if (!Array.isArray(v.rejected) || v.rejected.length < 8) fail('fewer than 8 rejected onion3 cases');
+  for (const c of v.rejected) {
+    const res = processHop(unhex(c.cellHex), unhex(c.relaySeedHex), new Set(c.seenReplayKeysHex || []));
+    if (res.ok || res.error !== c.expectedError) fail(`rejected ${c.name}: expected ${c.expectedError}, got ${res.ok ? 'accepted' : res.error}`);
+  }
+  return { ok: true, version: v.specVersion, hops: verifiedHops, rejected: v.rejected.length };
+}
+
+// §14.10: sealed relay reservations (relay-seal.v1) and multi-hop carried sessions (relay-multihop.v1).
+export function runSealedRelayValidation(v = vectorFile('pal3-v0.6-sealed-relay-vectors.json')) {
+  const fail = (m) => { throw new Error(`sealed-relay vector: ${m}`); };
+  const mldsa = mldsaSupported();
+  const L = v.limits;
+
+  const computeBlind = (rClient, clientDigest, sessionId) =>
+    createHmac('sha384', rClient)
+      .update(Buffer.concat([Buffer.from('pal3-relay-blind-v1', 'ascii'), Buffer.from([0x00]), clientDigest, sessionId]))
+      .digest();
+
+  const verifyPalEnvelope = (c) => {
+    const body = decodePalCbor(unhex(c.bodyHex));
+    if (!Buffer.isBuffer(body.sessionId) || body.sessionId.length !== L.sessionIdBytes) return 'E_PAL3_RELAY_INVALID';
+    const relayPin = computeIdentityDigest(hexOf(body.relayEdPk), hexOf(body.relayDsaPk));
+    if (relayPin !== c.expectedRelayPinHex) return 'E_PAL3_RELAY_ISSUER_MISMATCH';
+    const expectedBlind = computeBlind(unhex(c.rClientHex), unhex(c.clientIdentityDigestHex), body.sessionId);
+    if (!Buffer.isBuffer(body.blindClientId) || body.blindClientId.length !== expectedBlind.length || !timingSafeEqual(body.blindClientId, expectedBlind)) {
+      return 'E_PAL3_RELAY_BLIND_MISMATCH';
+    }
+    if (c.clientIdentityDigestHex !== c.expectedClientPinHex) return 'E_PAL3_RELAY_BLIND_MISMATCH';
+    if (body.issuedAtMs > BigInt(c.nowMs + L.clockSkewMs)) return 'E_PAL3_RELAY_INVALID';
+    if (body.expiresAtMs <= BigInt(c.nowMs)) return 'E_PAL3_RELAY_EXPIRED';
+    let ok = false;
+    try {
+      ok = verifyHybridObject({
+        domain: 'pal3-relay-sealed-v1',
+        dsaContext: 'pal3-relay-sealed-v1',
+        signer: { edPkHex: hexOf(body.relayEdPk), dsaPkHex: hexOf(body.relayDsaPk) },
+        bodyHex: c.bodyHex,
+        sigEd25519Hex: c.sigEd25519Hex,
+        sigMldsa65Hex: c.sigMldsa65Hex,
+      }, { mldsa });
+    } catch { ok = false; }
+    return ok ? 'accepted' : 'E_PAL3_RELAY_AUTH_FAILED';
+  };
+
+  const verifyRelayToken = (c) => {
+    const tok = unhex(c.relayTokenHex);
+    if (tok.length !== L.relayTokenBytes) return 'E_PAL3_RELAY_INVALID';
+    const sessionId = unhex(c.presentedSessionIdHex || c.sessionIdHex);
+    const blindClientId = unhex(c.presentedBlindClientIdHex || c.blindClientIdHex);
+    const aad = Buffer.concat([Buffer.from('pal3-relay-token-v1', 'ascii'), Buffer.from([0x00]), sessionId, blindClientId]);
+    const nonce = tok.subarray(0, 12);
+    const ct = tok.subarray(12, 44);
+    const tag = tok.subarray(44, 60);
+    let plain;
+    try {
+      const dec = createDecipheriv('chacha20-poly1305', unhex(c.relayKeyHex), nonce, { authTagLength: 16 });
+      dec.setAAD(aad, { plaintextLength: ct.length });
+      dec.setAuthTag(tag);
+      plain = Buffer.concat([dec.update(ct), dec.final()]);
+    } catch {
+      return 'E_PAL3_RELAY_INVALID';
+    }
+    const issuedAtMs = plain.readBigUInt64BE(0);
+    const expiresAtMs = plain.readBigUInt64BE(8);
+    const byteQuota = plain.readBigUInt64BE(16);
+    const bandwidthBps = plain.readBigUInt64BE(24);
+    if (expiresAtMs <= BigInt(c.nowMs)) return 'E_PAL3_RELAY_EXPIRED';
+    if (c.tokenPlainHex && hexOf(plain) !== c.tokenPlainHex) return 'E_PAL3_RELAY_INVALID';
+    if (issuedAtMs !== BigInt(c.issuedAtMs) || byteQuota !== BigInt(c.byteQuota) || bandwidthBps !== BigInt(c.bandwidthBps)) return 'E_PAL3_RELAY_INVALID';
+    return 'accepted';
+  };
+
+  if (!Array.isArray(v.relaySeal) || v.relaySeal.length < 2) fail('fewer than 2 relaySeal cases');
+  for (const c of v.relaySeal) {
+    if (verifyPalEnvelope(c) !== 'accepted') fail(`relaySeal ${c.name}: pal verification failed`);
+    if (verifyRelayToken(c) !== 'accepted') fail(`relaySeal ${c.name}: relay token verification failed`);
+  }
+  if (!Array.isArray(v.relaySealRejected) || v.relaySealRejected.length < 10) fail('fewer than 10 relaySealRejected cases');
+  for (const c of v.relaySealRejected) {
+    const got = c.checkSide === 'relay' ? verifyRelayToken(c) : verifyPalEnvelope(c);
+    if (got !== c.expectedError) fail(`relaySealRejected ${c.name}: expected ${c.expectedError}, got ${got}`);
+  }
+
+  const parseMultihopFrame = (buf, optedIn = true) => {
+    if (!optedIn) return { error: 'E_PAL3_RELAY_NOT_ENABLED' };
+    if (buf.length < 27 || buf.length > L.multihopMaxFrameBytes) return { error: 'E_PAL3_RELAY_INVALID' };
+    const frameType = buf.readUInt8(0);
+    if (frameType !== L.multihopFrameType) return { error: 'E_PAL3_RELAY_INVALID' };
+    const sessionId = buf.subarray(1, 17);
+    const seq = buf.readBigUInt64BE(17);
+    const payloadLen = buf.readUInt16BE(25);
+    if (payloadLen < L.multihopMinPayloadBytes || payloadLen > L.multihopMaxPayloadBytes || buf.length !== 27 + payloadLen) {
+      return { error: 'E_PAL3_RELAY_INVALID' };
+    }
+    return { ok: true, sessionId, seq, payload: buf.subarray(27) };
+  };
+
+  const createReplayFilter = (windowSize = L.replayWindowSize) => {
+    let highest = -1n;
+    const seen = new Set();
+    return (seqNum) => {
+      const seq = BigInt(seqNum);
+      if (highest >= 0n && seq + BigInt(windowSize) <= highest) return 'E_PAL3_RELAY_REPLAY';
+      if (seen.has(seq)) return 'E_PAL3_RELAY_REPLAY';
+      seen.add(seq);
+      if (seq > highest) highest = seq;
+      return 'accepted';
+    };
+  };
+
+  for (const bf of v.relayMultihop.bridgeFrames) {
+    const inP = parseMultihopFrame(unhex(bf.inboundFrameHex), bf.optedIn);
+    const outP = parseMultihopFrame(unhex(bf.outboundFrameHex), bf.optedIn);
+    if (!inP.ok || !outP.ok) fail(`bridgeFrame ${bf.name}: failed frame parse`);
+    if (hexOf(inP.sessionId) !== v.relayMultihop.sessionId1Hex || hexOf(outP.sessionId) !== v.relayMultihop.sessionId2Hex) {
+      fail(`bridgeFrame ${bf.name}: session rewrite mismatch`);
+    }
+    if (inP.seq !== BigInt(bf.inboundSeq) || outP.seq !== BigInt(bf.outboundSeq)) fail(`bridgeFrame ${bf.name}: seq mismatch`);
+    if (hexOf(inP.payload) !== bf.opaqueRecordHex || hexOf(outP.payload) !== bf.opaqueRecordHex) {
+      fail(`bridgeFrame ${bf.name}: opaque_record was altered`);
+    }
+  }
+
+  const checkSeq = createReplayFilter(v.relayMultihop.replayWindowSequence.windowSize);
+  for (const st of v.relayMultihop.replayWindowSequence.steps) {
+    const got = checkSeq(st.seq);
+    if (got !== st.expected) fail(`replayWindowSequence seq ${st.seq}: expected ${st.expected}, got ${got}`);
+  }
+
+  if (!Array.isArray(v.relayMultihopRejected) || v.relayMultihopRejected.length < 6) fail('fewer than 6 relayMultihopRejected cases');
+  for (const c of v.relayMultihopRejected) {
+    let got;
+    if (c.kind === 'replay') {
+      const f = createReplayFilter();
+      for (const s of c.priorAcceptedSeqs) {
+        if (f(s) !== 'accepted') fail(`relayMultihopRejected ${c.name}: prior seq ${s} failed`);
+      }
+      got = f(c.seq);
+    } else {
+      const res = parseMultihopFrame(unhex(c.frameHex), c.optedIn);
+      got = res.ok ? 'accepted' : res.error;
+    }
+    if (got !== c.expectedError) fail(`relayMultihopRejected ${c.name}: expected ${c.expectedError}, got ${got}`);
+  }
+
+  return {
+    ok: true,
+    version: v.specVersion,
+    relaySeal: v.relaySeal.length,
+    relaySealRejected: v.relaySealRejected.length,
+    multihopBridges: v.relayMultihop.bridgeFrames.length,
+    multihopRejected: v.relayMultihopRejected.length,
+    mldsaChecked: mldsa,
+  };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
@@ -2346,21 +3030,33 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const ps = runPrivateShareValidation();
   console.log(`PAL/3.0 §8.3 private share vectors (${ps.blocks} blocks, ${ps.negative} rejections, HKDF-SHA-384 and ChaCha20-Poly1305) verified: PASS`);
   const dr = runDeviceRevocationValidation();
-  console.log(`PAL/3.0 §11.3 device certificate and revocation vectors (${dr.certificates} certificates, ${dr.negative} rejected, ${dr.steps} receiver steps; ${dr.mldsaChecked ? 'Ed25519 and ML-DSA-65' : 'Ed25519 only'}) verified: PASS`);
+  console.log(`PAL/3.0 §11.3 device certificate and revocation vectors (${dr.certificates} certificates, ${dr.negative} rejected, ${dr.steps} receiver steps, ${dr.operations} operation cases, ${dr.handshake} handshake cases; ${dr.mldsaChecked ? 'Ed25519 and ML-DSA-65' : 'Ed25519 only'}) verified: PASS`);
   const rg = runRegistryValidation();
   console.log(`PAL/3.0 A.6 registry vectors (${rg.selection} HELLO decisions, ${rg.negative} registration rejections) verified: PASS`);
   const pt = runPlaintextRecordValidation();
-  console.log(`PAL/3.0 §6.2 plaintext record vectors (${pt.records} records, ${pt.negative} rejections, ${pt.gate} gate scenarios) verified: PASS`);
+  console.log(`PAL/3.0 §6.2 plaintext record vectors (${pt.records} records, ${pt.negative} rejections, ${pt.gate} gate scenarios, ${pt.streamRule} stream rule scenarios) verified: PASS`);
   const ms = runMultiSealValidation();
   console.log(`PAL/3.0 §11.4 multi-recipient sealing vectors (${ms.sealed} sealed objects, ${ms.lists} device lists, ${ms.signed} device signatures, ${ms.negative} rejections; ML-KEM-768 ${ms.validated}) verified: PASS`);
   const hd = runHardeningValidation();
-  console.log(`PAL/3.0 §11.2 hardening vectors (${hd.uri} URIs, ${hd.x25519} X25519 keys, ${hd.mlkem} ML-KEM keys, ${hd.scenarios} reassembly scenarios with ${hd.steps} steps) verified: PASS`);
+  console.log(`PAL/3.0 §11.2 hardening vectors (${hd.uri} URIs, ${hd.x25519} X25519 keys, ${hd.mlkem} ML-KEM keys, ${hd.scenarios} reassembly scenarios with ${hd.steps} steps, ${hd.credit} credit scenarios and ${hd.ranges} block range cases) verified: PASS`);
   const lp = runLocalPolicyValidation();
   console.log(`PAL/3.0 §12.3 and §12.4 local policy vectors (${lp.sources} linter cases, ${lp.scenarios} limit scenarios with ${lp.steps} steps) verified: PASS`);
   const pn = runPrivateNetworkAcceptValidation();
-  console.log(`PAL/3.0 §13.4-13.6 private network vectors (${pn.accept} acceptance decisions, ${pn.state} stored-profile states, ${pn.members} member and ${pn.hosts} host decisions) verified: PASS`);
+  console.log(`PAL/3.0 §13.4-13.6 private network vectors (${pn.accept} acceptance decisions, ${pn.state} stored-profile states, ${pn.members} member and ${pn.hosts} host decisions, ${pn.behaviors} behavior cases) verified: PASS`);
+  const pnh = runPrivateNetworkHybridValidation();
+  console.log(`PAL/3.0 §13.1-13.3 hybrid private network profile/handover vectors (${pnh.rejected} rejections; ${pnh.mldsaChecked ? 'Ed25519 and ML-DSA-65' : 'Ed25519 only'}) verified: PASS`);
   const px = runPexValidation();
   console.log(`PAL/3.0 §14.3 peer exchange vectors (${px.receive} receive cases, response of ${px.responded} entries, keys only) verified: PASS`);
+  const tp = runTransportPolicyValidation();
+  console.log(`PAL/3.0 §14.1, §14.2, §14.4 and §14.11 transport policy vectors (${tp.path} path decisions, ${tp.address} address-handling decisions, ${tp.records} record rules, ${tp.boundary} boundary decisions) verified: PASS`);
+  const mb = runMailboxV2Validation();
+  console.log(`PAL/3.0 §14.6 hybrid mailbox blob v2 vectors (${mb.rejected} rejections; ${mb.mldsaChecked ? 'Ed25519 and ML-DSA-65' : 'Ed25519 only'}) verified: PASS`);
+  const sr = runSealedRelayValidation();
+  console.log(`PAL/3.0 §14.10 sealed relay reservation and multi-hop carried session vectors (${sr.relaySeal} sealed, ${sr.relaySealRejected} sealed rejections, ${sr.multihopBridges} bridge frames, ${sr.multihopRejected} multi-hop rejections; ${sr.mldsaChecked ? 'Ed25519 and ML-DSA-65' : 'Ed25519 only'}) verified: PASS`);
+  const o3 = runOnion3Validation();
+  console.log(`PAL/3.0 §15.9 onion/3 blinded cell vectors (${o3.hops} hops across 3/2/1-hop paths, ${o3.rejected} rejections) verified: PASS`);
+  const eb = runEnrollmentBindingValidation();
+  console.log(`PAL/3.0 §11.3 item 2 and §11.2 item 2 enrollment and caller binding vectors (${eb.enrollment} enrollment decisions, ${eb.receiverForms} receiver-form decisions, ${eb.callerBinding} binding decisions) verified: PASS`);
   const nt = runNatTraversalValidation();
-  console.log(`PAL/3.0 §4.1 NAT traversal vectors (${nt.addresses} addresses, ${nt.scenarios} observation scenarios, ${nt.punch} start-time plans, ${nt.reservations} relay reservations) verified: PASS`);
+  console.log(`PAL/3.0 §4.1 NAT traversal vectors (${nt.addresses} addresses, ${nt.scenarios} observation scenarios, ${nt.punch} start-time plans, ${nt.reservations} relay reservations, ${nt.dht} DHT address scenarios, ${nt.pacing} pacing and ${nt.ports} port prediction cases) verified: PASS`);
 }

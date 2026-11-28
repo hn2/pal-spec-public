@@ -725,5 +725,202 @@
         }
       ]
     }
+  ],
+  "streamRule": [
+    {
+      "name": "blockReadOpenDirect",
+      "description": "A block read the receiver opened, path direct: the plaintext DATA is accepted and Merkle-verified",
+      "stream": "blockRead",
+      "streamState": "open",
+      "pathChange": null,
+      "arrivalMs": 0,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "delivered"
+      }
+    },
+    {
+      "name": "batchReadOpenDirect",
+      "description": "A batch read the receiver opened, path direct",
+      "stream": "batchRead",
+      "streamState": "open",
+      "pathChange": null,
+      "arrivalMs": 0,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "delivered"
+      }
+    },
+    {
+      "name": "blockReadOpenInsideDrainWindow",
+      "description": "The path left direct at t=1000 ms; plaintext DATA in flight arrives at t=2000 ms",
+      "stream": "blockRead",
+      "streamState": "open",
+      "pathChange": {
+        "atMs": 1000,
+        "to": "buddy_relay"
+      },
+      "arrivalMs": 2000,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "delivered"
+      }
+    },
+    {
+      "name": "blockReadOpenLastMillisecondOfDrainWindow",
+      "description": "The same at t=3999 ms (the window is [1000, 4000))",
+      "stream": "blockRead",
+      "streamState": "open",
+      "pathChange": {
+        "atMs": 1000,
+        "to": "buddy_relay"
+      },
+      "arrivalMs": 3999,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "delivered"
+      }
+    },
+    {
+      "name": "blockReadOpenAtEndOfDrainWindow",
+      "description": "The same at t=4000 ms: the window has ended, the session closes",
+      "stream": "blockRead",
+      "streamState": "open",
+      "pathChange": {
+        "atMs": 1000,
+        "to": "buddy_relay"
+      },
+      "arrivalMs": 4000,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "closed",
+        "error": "E_PAL3_PLAINTEXT_FORBIDDEN"
+      }
+    },
+    {
+      "name": "plaintextOnAStreamNeverOpened",
+      "description": "Plaintext DATA on a stream id the receiver never opened",
+      "stream": "none",
+      "streamState": "unknown",
+      "pathChange": null,
+      "arrivalMs": 0,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "closed",
+        "error": "E_PAL3_PLAINTEXT_FORBIDDEN"
+      }
+    },
+    {
+      "name": "plaintextOnARequestStream",
+      "description": "Plaintext DATA on a stream opened for an ordinary request (not a block or batch read)",
+      "stream": "rpcRequest",
+      "streamState": "open",
+      "pathChange": null,
+      "arrivalMs": 0,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "closed",
+        "error": "E_PAL3_PLAINTEXT_FORBIDDEN"
+      }
+    },
+    {
+      "name": "plaintextOnARequestStreamInsideDrainWindow",
+      "description": "The drain window does not make a request stream eligible",
+      "stream": "rpcRequest",
+      "streamState": "open",
+      "pathChange": {
+        "atMs": 1000,
+        "to": "buddy_relay"
+      },
+      "arrivalMs": 2000,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "closed",
+        "error": "E_PAL3_PLAINTEXT_FORBIDDEN"
+      }
+    },
+    {
+      "name": "trailingOnACancelledBlockStream",
+      "description": "Plaintext DATA after the receiver cancelled its block read: discarded, the session stays open",
+      "stream": "blockRead",
+      "streamState": "cancelled",
+      "pathChange": null,
+      "arrivalMs": 0,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "discarded"
+      }
+    },
+    {
+      "name": "trailingOnAFinishedBlockStream",
+      "description": "Plaintext DATA after a block read finished: discarded",
+      "stream": "blockRead",
+      "streamState": "finished",
+      "pathChange": null,
+      "arrivalMs": 0,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "discarded"
+      }
+    },
+    {
+      "name": "trailingOnAFinishedBatchStream",
+      "description": "Plaintext DATA after a batch read finished: discarded",
+      "stream": "batchRead",
+      "streamState": "finished",
+      "pathChange": null,
+      "arrivalMs": 0,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "discarded"
+      }
+    },
+    {
+      "name": "trailingOnACancelledStreamInsideDrainWindow",
+      "description": "Trailing plaintext DATA of a cancelled stream at t=2000 ms after the path left direct at t=1000 ms: discarded",
+      "stream": "blockRead",
+      "streamState": "cancelled",
+      "pathChange": {
+        "atMs": 1000,
+        "to": "buddy_relay"
+      },
+      "arrivalMs": 2000,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "discarded"
+      }
+    },
+    {
+      "name": "trailingOnACancelledStreamAfterDrainWindow",
+      "description": "The same at t=4000 ms: outside the drain window on a non-direct path the record closes the session",
+      "stream": "blockRead",
+      "streamState": "cancelled",
+      "pathChange": {
+        "atMs": 1000,
+        "to": "buddy_relay"
+      },
+      "arrivalMs": 4000,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "closed",
+        "error": "E_PAL3_PLAINTEXT_FORBIDDEN"
+      }
+    },
+    {
+      "name": "trailingOnAFinishedStreamAfterDrainWindow",
+      "description": "A finished stream, the path left direct, t=4000 ms: closes the session",
+      "stream": "blockRead",
+      "streamState": "finished",
+      "pathChange": {
+        "atMs": 1000,
+        "to": "buddy_relay"
+      },
+      "arrivalMs": 4000,
+      "drainWindowMs": 3000,
+      "expected": {
+        "outcome": "closed",
+        "error": "E_PAL3_PLAINTEXT_FORBIDDEN"
+      }
+    }
   ]
 }

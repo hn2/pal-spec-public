@@ -64,7 +64,7 @@ test('specification states the first-contact key, node identifiers and the unlin
   for (const text of ['**First-contact pair key (normative).**', 'palexplorer-pair-rendezvous-v1', 'palexplorer-pair-rendezvous-beacon-v1',
     'palexplorer-rendezvous-beacon-v1', v.pairKey.base, '**DHT node identifiers (normative).**', 'MUST NOT be derived from an identity key',
     '**Unlinkability.** No component may link a network address to an identity, a handle or a share',
-    'MUST use signed records only for content whose owner made it public', 'Status: **Draft 0.6.22**']) {
+    'MUST use signed records only for content whose owner made it public', 'Status: **Draft 0.6.23**']) {
     assert.ok(spec.includes(text), text);
   }
 });
